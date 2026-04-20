@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FixNeuro - تسجيل الدخول</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a1628; color: white; min-height: 100vh; display: flex; flex-direction: column; }
+    nav { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: #0d1f3c; }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo span { font-size: 22px; font-weight: bold; }
+    .logo span em { color: #4db8ff; font-style: normal; }
+    .logo-icon { background: #1a6fd4; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
+    .card { background: #0d1f3c; border-radius: 20px; padding: 40px; width: 100%; max-width: 420px; border: 1px solid #1a3a6b; }
+    .card-icon { width: 70px; height: 70px; background: rgba(26,111,212,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 0 auto 20px; }
+    .card h2 { text-align: center; font-size: 24px; margin-bottom: 8px; }
+    .card p { text-align: center; color: #aac4e0; font-size: 14px; margin-bottom: 30px; }
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; font-size: 14px; margin-bottom: 8px; color: #aac4e0; }
+    .form-group input { width: 100%; padding: 12px 15px; background: #162d52; border: 1px solid #1a3a6b; border-radius: 10px; color: white; font-size: 15px; outline: none; }
+    .form-group input:focus { border-color: #1a6fd4; }
+    .form-group input::placeholder { color: #5a7a9a; }
+    .forgot { text-align: left; margin-top: 5px; }
+    .forgot a { color: #4db8ff; font-size: 13px; text-decoration: none; }
+    .btn-login { width: 100%; padding: 14px; background: #1a6fd4; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+    .btn-login:hover { background: #1558a8; }
+    .divider { text-align: center; color: #5a7a9a; margin: 20px 0; font-size: 13px; }
+    .register-link { text-align: center; font-size: 14px; color: #aac4e0; }
+    .register-link a { color: #4db8ff; text-decoration: none; font-weight: bold; }
+    .message { padding: 12px; border-radius: 8px; margin-bottom: 15px; text-align: center; font-size: 14px; display: none; }
+    .message.error { background: rgba(255,50,50,0.2); border: 1px solid #ff3232; color: #ff8080; }
+    .message.success { background: rgba(50,255,100,0.2); border: 1px solid #32ff64; color: #80ff80; }
+    footer { background: #0d1f3c; padding: 15px; text-align: center; color: #aac4e0; font-size: 13px; border-top: 1px solid #1a3a6b; }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="logo">
+      <div class="logo-icon">🔧</div>
+      <span>Fix<em>NEURO</em></span>
+    </div>
+    <a href="index.html" style="color:#aac4e0; text-decoration:none; font-size:14px;">الرئيسية</a>
+  </nav>
+  <div class="container">
+    <div class="card">
+      <div class="card-icon">🔑</div>
+      <h2>مرحباً بعودتك</h2>
+      <p>سجّل دخولك للوصول إلى حسابك</p>
+      <div class="message" id="message"></div>
+      <div class="form-group">
+        <label>البريد الإلكتروني</label>
+        <input type="email" id="email" placeholder="example@email.com" />
+      </div>
+      <div class="form-group">
+        <label>كلمة المرور</label>
+        <input type="password" id="password" placeholder="••••••••" />
+        <div class="forgot"><a href="#">نسيت كلمة المرور؟</a></div>
+      </div>
+      <button class="btn-login" onclick="login()">دخول</button>
+      <div class="divider">— أو —</div>
+      <div class="register-link">
+        ما عندك حساب؟ <a href="register.html">سجّل الآن</a>
+      </div>
+    </div>
+  </div>
+  <footer>
+    <p>© 2025 FixNeuro - Car Doctor. جميع الحقوق محفوظة</p>
+  </footer>
+  <script type="module">
+    import { supabase } from './database.js'
+
+    window.login = async function () {
+      const email = document.getElementById('email').value
+      const password = document.getElementById('password').value
+      const msg = document.getElementById('message')
+
+      if (!email || !password) {
+        msg.style.display = 'block'
+        msg.className = 'message error'
+        msg.innerText = 'يرجى إدخال البريد الإلكتروني وكلمة المرور'
+        return
+      }
+
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+
+      if (error) {
+        msg.style.display = 'block'
+        msg.className = 'message error'
+        msg.innerText = 'البريد أو كلمة المرور غير صحيحة'
+      } else {
+        msg.style.display = 'block'
+        msg.className = 'message success'
+        msg.innerText = 'تم الدخول بنجاح! ✅'
+        setTimeout(() => window.location.href = 'index.html', 1500)
+      }
+    }
+  </script>
+</body>
+</html>

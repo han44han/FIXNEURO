@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FixNeuro - التقارير</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a1628; color: white; min-height: 100vh; display: flex; flex-direction: column; }
+    nav { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: #0d1f3c; }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo span { font-size: 22px; font-weight: bold; }
+    .logo span em { color: #4db8ff; font-style: normal; }
+    .logo-icon { background: #1a6fd4; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .nav-links { display: flex; align-items: center; gap: 15px; }
+    .nav-links a { color: white; text-decoration: none; font-size: 14px; }
+    .container { flex: 1; padding: 30px 20px; max-width: 800px; margin: 0 auto; width: 100%; }
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+    .page-header h2 { font-size: 24px; }
+    .page-header p { color: #aac4e0; font-size: 14px; margin-top: 5px; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px; }
+    .stat-card { background: #0d1f3c; border-radius: 15px; padding: 20px; text-align: center; border: 1px solid #1a3a6b; }
+    .stat-icon { font-size: 28px; margin-bottom: 8px; }
+    .stat-num { font-size: 28px; font-weight: bold; color: #4db8ff; }
+    .stat-label { color: #aac4e0; font-size: 13px; margin-top: 5px; }
+    .filters { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .filter-btn { padding: 8px 18px; border-radius: 20px; border: 1px solid #1a3a6b; background: transparent; color: white; cursor: pointer; font-size: 13px; }
+    .filter-btn.active { background: #1a6fd4; border-color: #1a6fd4; }
+    .report-card { background: #0d1f3c; border-radius: 15px; padding: 20px; margin-bottom: 15px; border: 1px solid #1a3a6b; }
+    .report-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px; }
+    .report-title { font-size: 16px; font-weight: bold; }
+    .report-date { color: #aac4e0; font-size: 12px; margin-top: 3px; }
+    .severity { padding: 4px 12px; border-radius: 10px; font-size: 12px; }
+    .severity.high { background: rgba(255,50,50,0.2); color: #ff8080; }
+    .severity.medium { background: rgba(255,165,0,0.2); color: #ffa500; }
+    .severity.low { background: rgba(50,200,100,0.2); color: #50c864; }
+    .report-car { display: flex; align-items: center; gap: 8px; color: #aac4e0; font-size: 14px; margin-bottom: 10px; }
+    .causes { margin-bottom: 12px; }
+    .causes-title { font-size: 13px; color: #aac4e0; margin-bottom: 8px; }
+    .cause-item { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .cause-bar-wrap { flex: 1; background: #162d52; border-radius: 5px; height: 8px; }
+    .cause-bar { height: 8px; border-radius: 5px; background: #1a6fd4; }
+    .cause-percent { font-size: 13px; color: #4db8ff; min-width: 40px; }
+    .cause-name { font-size: 13px; min-width: 120px; }
+    .report-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #1a3a6b; padding-top: 12px; }
+    .cost { color: #f5a623; font-size: 15px; font-weight: bold; }
+    .btn-workshop { padding: 8px 18px; background: #1a6fd4; color: white; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; text-decoration: none; }
+    .empty { text-align: center; padding: 60px 20px; color: #aac4e0; }
+    .empty-icon { font-size: 60px; margin-bottom: 15px; }
+    .btn-start { display: inline-block; margin-top: 20px; padding: 12px 30px; background: #1a6fd4; color: white; border-radius: 10px; text-decoration: none; font-size: 15px; }
+    footer { background: #0d1f3c; padding: 15px; text-align: center; color: #aac4e0; font-size: 13px; border-top: 1px solid #1a3a6b; }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="logo">
+      <div class="logo-icon">🔧</div>
+      <span>Fix<em>NEURO</em></span>
+    </div>
+    <div class="nav-links">
+      <a href="index.html">الرئيسية</a>
+      <a href="dia.html">تشخيص</a>
+      <a href="map.html">الورش</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="page-header">
+      <div>
+        <h2>📋 تقارير التشخيص</h2>
+        <p>سجل كامل لجميع تشخيصات سيارتك</p>
+      </div>
+      <a href="dia.html" style="background:#1a6fd4; color:white; padding:10px 20px; border-radius:10px; text-decoration:none; font-size:14px;">+ تشخيص جديد</a>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-icon">📋</div>
+        <div class="stat-num" id="totalNum">0</div>
+        <div class="stat-label">إجمالي التقارير</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⚠️</div>
+        <div class="stat-num" id="highNum">0</div>
+        <div class="stat-label">أعطال عالية</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">✅</div>
+        <div class="stat-num" id="resolvedNum">0</div>
+        <div class="stat-label">تم حلها</div>
+      </div>
+    </div>
+
+    <div class="filters">
+      <button class="filter-btn active" onclick="filterReports('all', this)">الكل</button>
+      <button class="filter-btn" onclick="filterReports('high', this)">عالي الخطورة</button>
+      <button class="filter-btn" onclick="filterReports('medium', this)">متوسط</button>
+      <button class="filter-btn" onclick="filterReports('low', this)">منخفض</button>
+    </div>
+
+    <div id="reportsList"></div>
+  </div>
+
+  <footer>
+    <p>© 2025 FixNeuro - Car Doctor. جميع الحقوق محفوظة</p>
+  </footer>
+
+  <script type="module">
+    import { supabase } from './database.js'
+
+    let allReports = []
+    let currentFilter = 'all'
+
+    async function loadReports() {
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        window.location.href = 'login.html'
+        return
+      }
+
+      const { data, error } = await supabase
+        .from('maintenance_reports')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+
+      if (error || !data) {
+        allReports = []
+      } else {
+        allReports = data
+      }
+
+      document.getElementById('totalNum').innerText = allReports.length
+      document.getElementById('highNum').innerText = allReports.filter(r => r.status === 'pending').length
+      document.getElementById('resolvedNum').innerText = allReports.filter(r => r.status === 'completed').length
+
+      renderReports()
+    }
+
+    window.filterReports = function(filter, btn) {
+      currentFilter = filter
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'))
+      btn.classList.add('active')
+      renderReports()
+    }
+
+    function renderReports() {
+      const list = document.getElementById('reportsList')
+
+      if (allReports.length === 0) {
+        list.innerHTML = `
+          <div class="empty">
+            <div class="empty-icon">📋</div>
+            <p>لا توجد تقارير بعد</p>
+            <a href="dia.html" class="btn-start">ابدأ أول تشخيص</a>
+          </div>`
+        return
+      }
+
+      list.innerHTML = allReports.map(r => `
+        <div class="report-card">
+          <div class="report-header">
+            <div>
+              <div class="report-title">${r.title}</div>
+              <div class="report-date">📅 ${new Date(r.created_at).toLocaleDateString('ar-SA')}</div>
+            </div>
+            <span class="severity medium">${r.status === 'completed' ? 'مكتمل' : 'قيد الانتظار'}</span>
+          </div>
+          <div class="report-car">📝 ${r.description || 'لا يوجد وصف'}</div>
+          <div class="report-footer">
+            <div class="cost">💰 ${r.cost ? r.cost + ' ريال' : 'غير محدد'}</div>
+            <a href="map.html" class="btn-workshop">ابحث عن ورشة</a>
+          </div>
+        </div>`).join('')
+    }
+
+    loadReports()
+  </script>
+</body>
+</html>

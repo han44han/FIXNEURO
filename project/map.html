@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FixNeuro - خريطة الورش</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a1628; color: white; min-height: 100vh; display: flex; flex-direction: column; }
+    nav { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: #0d1f3c; }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo span { font-size: 22px; font-weight: bold; }
+    .logo span em { color: #4db8ff; font-style: normal; }
+    .logo-icon { background: #1a6fd4; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .page-header { padding: 25px; background: #0d1f3c; border-bottom: 1px solid #1a3a6b; }
+    .page-header h2 { font-size: 24px; margin-bottom: 5px; }
+    .page-header p { color: #aac4e0; font-size: 14px; }
+    .main { display: flex; flex: 1; height: calc(100vh - 180px); }
+    #map { flex: 1; }
+    .sidebar { width: 320px; background: #0d1f3c; overflow-y: auto; border-right: 1px solid #1a3a6b; padding: 15px; }
+    .search-box { position: relative; margin-bottom: 15px; }
+    .search-box input { width: 100%; padding: 10px 15px; background: #162d52; border: 1px solid #1a3a6b; border-radius: 10px; color: white; font-size: 14px; outline: none; }
+    .search-box input::placeholder { color: #5a7a9a; }
+    .btn-location { width: 100%; padding: 10px; background: #1a6fd4; color: white; border: none; border-radius: 10px; font-size: 14px; cursor: pointer; margin-bottom: 15px; }
+    .workshop-card { background: #162d52; border-radius: 12px; padding: 15px; margin-bottom: 12px; border: 1px solid #1a3a6b; cursor: pointer; }
+    .workshop-card:hover { border-color: #1a6fd4; }
+    .workshop-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px; }
+    .workshop-name { font-size: 15px; font-weight: bold; }
+    .badge-open { background: rgba(50,200,100,0.2); color: #50c864; padding: 3px 8px; border-radius: 10px; font-size: 11px; }
+    .workshop-rating { color: #f5a623; font-size: 13px; margin-bottom: 6px; }
+    .workshop-distance { color: #aac4e0; font-size: 13px; margin-bottom: 8px; }
+    .workshop-services { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+    .service-tag { background: rgba(26,111,212,0.2); border: 1px solid #1a6fd4; padding: 3px 8px; border-radius: 8px; font-size: 11px; color: #4db8ff; }
+    .btn-details { width: 100%; padding: 8px; background: #1a6fd4; color: white; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; }
+    .sidebar-title { font-size: 16px; font-weight: bold; margin-bottom: 12px; color: #aac4e0; }
+    footer { background: #0d1f3c; padding: 12px; text-align: center; color: #aac4e0; font-size: 13px; border-top: 1px solid #1a3a6b; }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; }
+    .modal.show { display: flex; }
+    .modal-content { background: #0d1f3c; border-radius: 20px; padding: 30px; max-width: 400px; width: 90%; border: 1px solid #1a3a6b; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-header h3 { font-size: 18px; }
+    .close-btn { background: none; border: none; color: #aac4e0; font-size: 22px; cursor: pointer; }
+    .modal-info { color: #aac4e0; font-size: 14px; line-height: 2; }
+    .modal-info strong { color: white; }
+    .btn-call { width: 100%; padding: 12px; background: #1a6fd4; color: white; border: none; border-radius: 10px; font-size: 15px; cursor: pointer; margin-top: 15px; }
+    @media (max-width: 768px) { .main { flex-direction: column; } .sidebar { width: 100%; height: 300px; } #map { height: 300px; } }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="logo">
+      <div class="logo-icon">🔧</div>
+      <span>Fix<em>NEURO</em></span>
+    </div>
+    <a href="index.html" style="color:#aac4e0; text-decoration:none; font-size:14px;">الرئيسية</a>
+  </nav>
+  <div class="page-header">
+    <h2>📍 خريطة ورش الصيانة</h2>
+    <p>اعثر على أقرب ورشة صيانة موثوقة بالقرب منك</p>
+  </div>
+  <div class="main">
+    <div class="sidebar">
+      <div class="search-box">
+        <input type="text" placeholder="🔍 ابحث عن ورشة..." id="searchInput" oninput="filterWorkshops()" />
+      </div>
+      <button class="btn-location" onclick="getLocation()">📍 استخدم موقعي الحالي</button>
+      <div class="sidebar-title">الورش القريبة منك</div>
+      <div id="workshopsList"></div>
+    </div>
+    <div id="map"></div>
+  </div>
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalName"></h3>
+        <button class="close-btn" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-info" id="modalInfo"></div>
+      <button class="btn-call" id="modalCall">📞 اتصل الآن</button>
+    </div>
+  </div>
+  <footer>
+    <p>© 2025 FixNeuro - Car Doctor. جميع الحقوق محفوظة</p>
+  </footer>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module">
+    import { supabase } from './database.js'
+
+    let workshops = [
+      { id: 1, name: 'ورشة الخليج للسيارات', lat: 24.7136, lng: 46.6753, rating: 4.8, reviews: 124, distance: '0.8 كم', phone: '0501234567', address: 'حي النزهة، الرياض', services: ['تشخيص إلكتروني', 'تغيير زيت', 'مرامل'], open: true, hours: '8 صباحاً - 10 مساءً' },
+      { id: 2, name: 'مركز النجم للصيانة', lat: 24.7200, lng: 46.6800, rating: 4.5, reviews: 89, distance: '1.2 كم', phone: '0507654321', address: 'حي العليا، الرياض', services: ['كهرباء سيارات', 'تكييف', 'إطارات'], open: true, hours: '7 صباحاً - 11 مساءً' },
+      { id: 3, name: 'ورشة الأمانة', lat: 24.7050, lng: 46.6700, rating: 4.2, reviews: 56, distance: '1.8 كم', phone: '0509876543', address: 'حي الملز، الرياض', services: ['محرك', 'ناقل حركة', 'فرامل'], open: false, hours: '9 صباحاً - 9 مساءً' },
+      { id: 4, name: 'مركز الوطن للسيارات', lat: 24.7300, lng: 46.6900, rating: 4.6, reviews: 201, distance: '2.1 كم', phone: '0502468135', address: 'حي الروضة، الرياض', services: ['تشخيص', 'دهان', 'هيكل'], open: true, hours: '8 صباحاً - 12 ليلاً' }
+    ]
+
+    let map, markers = [], currentWorkshops = [...workshops]
+
+    map = L.map('map').setView([24.7136, 46.6753], 13)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map)
+
+    function addMarkers() {
+      markers.forEach(m => map.removeLayer(m))
+      markers = []
+      currentWorkshops.forEach(w => {
+        const marker = L.marker([w.lat, w.lng]).addTo(map).bindPopup(`<b>${w.name}</b><br>⭐ ${w.rating}<br>📞 ${w.phone}`)
+        marker.on('click', () => showModal(w))
+        markers.push(marker)
+      })
+    }
+
+    function renderList() {
+      const list = document.getElementById('workshopsList')
+      list.innerHTML = ''
+      currentWorkshops.forEach(w => {
+        const stars = '⭐'.repeat(Math.round(w.rating))
+        list.innerHTML += `
+          <div class="workshop-card" onclick="showModal(${JSON.stringify(w).replace(/"/g, '&quot;')})">
+            <div class="workshop-header">
+              <div class="workshop-name">${w.name}</div>
+              <div class="badge-open">${w.open ? 'مفتوح الآن' : 'مغلق'}</div>
+            </div>
+            <div class="workshop-rating">${stars} ${w.rating} (${w.reviews} تقييم)</div>
+            <div class="workshop-distance">📍 ${w.distance}</div>
+            <div class="workshop-services">${w.services.map(s => `<span class="service-tag">${s}</span>`).join('')}</div>
+            <button class="btn-details">عرض التفاصيل</button>
+          </div>`
+      })
+    }
+
+    window.filterWorkshops = function() {
+      const q = document.getElementById('searchInput').value.toLowerCase()
+      currentWorkshops = workshops.filter(w => w.name.includes(q) || w.services.some(s => s.includes(q)))
+      renderList()
+      addMarkers()
+    }
+
+    window.getLocation = function() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+          map.setView([pos.coords.latitude, pos.coords.longitude], 14)
+          L.marker([pos.coords.latitude, pos.coords.longitude]).addTo(map).bindPopup('📍 موقعك الحالي').openPopup()
+        })
+      }
+    }
+
+    window.showModal = function(w) {
+      if (typeof w === 'string') w = JSON.parse(w)
+      document.getElementById('modalName').innerText = w.name
+      document.getElementById('modalInfo').innerHTML = `
+        <strong>العنوان:</strong> ${w.address}<br>
+        <strong>التقييم:</strong> ⭐ ${w.rating} (${w.reviews} تقييم)<br>
+        <strong>المسافة:</strong> ${w.distance}<br>
+        <strong>ساعات العمل:</strong> ${w.hours}<br>
+        <strong>الحالة:</strong> ${w.open ? '🟢 مفتوح الآن' : '🔴 مغلق'}<br>
+        <strong>الخدمات:</strong> ${w.services.join('، ')}`
+      document.getElementById('modalCall').onclick = () => window.location.href = `tel:${w.phone}`
+      document.getElementById('modal').classList.add('show')
+      map.setView([w.lat, w.lng], 15)
+    }
+
+    window.closeModal = function() {
+      document.getElementById('modal').classList.remove('show')
+    }
+
+    addMarkers()
+    renderList()
+  </script>
+</body>
+</html>
