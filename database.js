@@ -1,10 +1,6 @@
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const SUPABASE_URL = 'https://bhjzkuqmsghjogioaika.supabase.co'
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJoanprdXFtc2doam9naW9haWthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMDg0MjYsImV4cCI6MjA4ODY4NDQyNn0.uSQC6RDvS5k9UJE9EIepFNWLqEC5Ngvrm-D09L132Bs'
+const SUPABASE_URL = 'https://dceuyznzgcaluvzzexxh.supabase.co'
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjZXV5em56Z2NhbHV2enpleHhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4Nzg5MzcsImV4cCI6MjA5MjQ1NDkzN30.QAUrzaoqLV19qw2XmhEwRg9ZuAIb6KQzqr0IHh2dVI4'
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
-
-export const ROBOFLOW_KEY = 'OjLfi8OCXSoi13dXSVS4'
-export const ROBOFLOW_WORKFLOW = 'detect-and-classify'
-export const ROBOFLOW_WORKSPACE = 'projects-workspace-jym4w'  
