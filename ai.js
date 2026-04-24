@@ -1,41 +1,44 @@
-const API_URL = "https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-large";
-const API_TOKEN = "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"; // حطي التوكن حقك هنا
+export async function diagnoseByText(problem) {
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': 'YOUR_ANTHROPIC_KEY',
+      'anthropic-version': '2023-06-01'
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 1024,
+      messages: [{
+        role: 'user',
+        content: `أنت خبير في تشخيص أعطال السيارات. المستخدم يصف المشكلة التالية: "${problem}". أعطِ تشخيصاً واضحاً ومختصراً باللغة العربية يشمل: السبب المحتمل، درجة الخطورة، والتوصية.`
+      }]
+    })
+  })
+  const data = await response.json()
+  return data.content[0].text
+}
 
-export async function analyzeImage() {
-    const imageInput = document.getElementById('imageInput');
-    const resultDiv = document.getElementById('resultItems');
-    const loader = document.getElementById('loading');
-
-    if (!imageInput.files[0]) return alert("ارفعي صورة أولاً!");
-
-    loader.style.display = 'block';
-    resultDiv.innerHTML = "جاري الفحص...";
-
-    try {
-        // الطريقة هذي (Blob مباشرة) هي أسرع وأسهل طريقة يتقبلها المتصفح
-        const response = await fetch(API_URL, {
-            method: "POST",
-            headers: { "Authorization": "Bearer " + API_TOKEN },
-            body: imageInput.files[0]
-        });
-
-        const result = await response.json();
-        loader.style.display = 'none';
-
-        if (response.ok) {
-            // الموديل هذا يعطي وصف بالانجليزي، بنحط ترجمة تقريبية بسيطة
-            const desc = result[0]?.generated_text || "لم يتم تحديد الضرر بدقة";
-            
-            resultDiv.innerHTML = `
-                <div style="background:#162d52; padding:20px; border-radius:12px; border-right:5px solid #4db8ff;">
-                    <h3 style="color:#4db8ff;">🔍 تقرير الذكاء الاصطناعي:</h3>
-                    <p style="margin-top:10px; font-size:18px;">النتيجة: ${desc}</p>
-                </div>`;
-        } else {
-            resultDiv.innerHTML = "الموديل يجهز نفسه، اضغطي الزر مرة ثانية بعد 10 ثواني.";
-        }
-    } catch (e) {
-        loader.style.display = 'none';
-        resultDiv.innerHTML = "فيه مشكلة بالاتصال، تأكدي إنك مشغلة الإضافة وحاطة Authorization في الإعدادات.";
-    }
+export async function diagnoseByImage(imageBase64) {
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': 'YOUR_ANTHROPIC_KEY',
+      'anthropic-version': '2023-06-01'
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 1024,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: imageBase64 } },
+          { type: 'text', text: 'أنت خبير في تشخيص أعطال السيارات. حلل هذه الصورة وأعطِ تشخيصاً واضحاً باللغة العربية يشمل: المشكلة المرئية، السبب المحتمل، درجة الخطورة، والتوصية.' }
+        ]
+      }]
+    })
+  })
+  const data = await response.json()
+  return data.content[0].text
 }
