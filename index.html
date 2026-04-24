@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FixNeuro - Car Doctor</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a1628; color: white; }
+    nav { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: #0d1f3c; position: sticky; top: 0; z-index: 100; }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo span { font-size: 22px; font-weight: bold; }
+    .logo span em { color: #4db8ff; font-style: normal; }
+    .logo-icon { background: #1a6fd4; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .nav-links { display: flex; align-items: center; gap: 15px; }
+    .nav-links a { color: white; text-decoration: none; font-size: 15px; }
+    .nav-links a:hover { color: #4db8ff; }
+    .btn-nav { background: #1a6fd4; color: white !important; padding: 8px 20px; border-radius: 20px; }
+    .hero { background: linear-gradient(135deg, #0d1f3c 0%, #1a3a6b 100%); padding: 80px 25px; text-align: center; }
+    .hero-badge { display: inline-block; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 8px 20px; border-radius: 20px; font-size: 14px; margin-bottom: 30px; }
+    .hero h1 { font-size: 42px; line-height: 1.3; margin-bottom: 20px; }
+    .hero h1 span { color: #4db8ff; }
+    .hero p { font-size: 18px; color: #aac4e0; margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto; }
+    .hero-btns { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
+    .btn-primary { background: #1a6fd4; color: white; padding: 14px 35px; border-radius: 10px; text-decoration: none; font-size: 16px; font-weight: bold; display: inline-block; }
+    .btn-primary:hover { background: #1558a8; }
+    .btn-secondary { background: rgba(255,255,255,0.1); color: white; padding: 14px 35px; border-radius: 10px; text-decoration: none; font-size: 16px; border: 1px solid rgba(255,255,255,0.3); display: inline-block; }
+    .btn-secondary:hover { background: rgba(255,255,255,0.2); }
+    .user-welcome { background: #0d1f3c; border-radius: 20px; padding: 25px; margin: 30px 25px; border: 1px solid #1a3a6b; display: none; }
+    .user-welcome h3 { font-size: 22px; margin-bottom: 5px; }
+    .user-welcome p { color: #aac4e0; font-size: 14px; margin-bottom: 20px; }
+    .quick-links { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
+    .quick-link { background: #162d52; border-radius: 12px; padding: 20px; text-align: center; text-decoration: none; color: white; }
+    .quick-link:hover { border: 1px solid #1a6fd4; }
+    .quick-link .icon { font-size: 30px; margin-bottom: 8px; }
+    .quick-link p { font-size: 14px; color: #aac4e0; }
+    .features { padding: 60px 25px; background: #0f2340; }
+    .features h2 { text-align: center; font-size: 28px; margin-bottom: 40px; }
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; max-width: 1000px; margin: 0 auto; }
+    .feature-card { background: #162d52; border-radius: 15px; padding: 25px; text-align: center; text-decoration: none; color: white; display: block; }
+    .feature-card:hover { border: 1px solid #1a6fd4; }
+    .feature-icon { width: 60px; height: 60px; background: rgba(26,111,212,0.2); border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 15px; }
+    .feature-card h3 { font-size: 18px; margin-bottom: 10px; }
+    .feature-card p { color: #aac4e0; font-size: 14px; line-height: 1.6; }
+    .how { padding: 60px 25px; background: #0a1628; }
+    .how h2 { text-align: center; font-size: 28px; margin-bottom: 10px; }
+    .how p { text-align: center; color: #aac4e0; margin-bottom: 40px; }
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; max-width: 900px; margin: 0 auto; }
+    .step { background: #162d52; border-radius: 15px; padding: 25px; text-align: center; }
+    .step-num { width: 50px; height: 50px; background: #1a6fd4; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; margin: 0 auto 15px; }
+    .step h3 { font-size: 16px; margin-bottom: 8px; }
+    .step p { color: #aac4e0; font-size: 13px; line-height: 1.5; }
+    .cta { background: linear-gradient(135deg, #1a3a6b, #0d1f3c); padding: 60px 25px; text-align: center; }
+    .cta h2 { font-size: 30px; margin-bottom: 15px; }
+    .cta p { color: #aac4e0; margin-bottom: 30px; }
+    footer { background: #0d1f3c; padding: 20px; text-align: center; color: #aac4e0; font-size: 14px; border-top: 1px solid #1a3a6b; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="logo">
+      <div class="logo-icon">🔧</div>
+      <span>Fix<em>NEURO</em></span>
+    </div>
+    <div class="nav-links" id="guestNav">
+      <a href="login.html">دخول</a>
+      <a href="register.html" class="btn-nav">ابدأ مجاناً</a>
+    </div>
+    <div class="nav-links" id="userNav" style="display:none;">
+      <a href="car.html">🚗 سيارتي</a>
+      <a href="dia.html">🔍 تشخيص</a>
+      <a href="map.html">📍 الورش</a>
+      <a href="reports.html">📋 التقارير</a>
+      <a href="#" onclick="logout()" style="color:#ff8080;">خروج</a>
+    </div>
+  </nav>
+
+  <div class="hero" id="guestHero">
+    <div class="hero-badge">🔧 منصة تشخيص أعطال السيارات الذكية</div>
+    <h1>اعرف سبب عطل سيارتك<br><span>قبل الورشة</span></h1>
+    <p>أدخل أعراض العطل واحصل على الأسباب المحتملة والحلول فوراً، مع خريطة تفاعلية لأقرب ورش الصيانة الموثوقة</p>
+    <div class="hero-btns">
+      <a href="register.html" class="btn-primary">ابدأ التشخيص الآن</a>
+      <a href="dia.html" class="btn-secondary">جرّب مجاناً</a>
+    </div>
+  </div>
+
+  <div class="user-welcome" id="userWelcome">
+    <h3 id="welcomeName">مرحباً 👋</h3>
+    <p>ماذا تريد أن تفعل اليوم؟</p>
+    <div class="quick-links">
+      <a href="dia.html" class="quick-link">
+        <div class="icon">🔍</div>
+        <div>تشخيص جديد</div>
+        <p>شخّص عطل سيارتك</p>
+      </a>
+      <a href="car.html" class="quick-link">
+        <div class="icon">🚗</div>
+        <div>سيارتي</div>
+        <p>إدارة بيانات سيارتك</p>
+      </a>
+      <a href="map.html" class="quick-link">
+        <div class="icon">📍</div>
+        <div>الورش</div>
+        <p>أقرب ورشة منك</p>
+      </a>
+      <a href="reports.html" class="quick-link">
+        <div class="icon">📋</div>
+        <div>التقارير</div>
+        <p>سجل التشخيصات</p>
+      </a>
+    </div>
+  </div>
+
+  <div class="features">
+    <h2>لماذا FixNeuro؟</h2>
+    <div class="features-grid">
+      <a href="dia.html" class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>تشخيص دقيق بالذكاء الاصطناعي</h3>
+        <p>يحلل الأعراض ويقارنها بقاعدة بيانات ضخمة من الأعطال</p>
+      </a>
+      <a href="map.html" class="feature-card">
+        <div class="feature-icon">📍</div>
+        <h3>خريطة الورش الموثوقة</h3>
+        <p>اعثر على أقرب ورشة صيانة أو محطة وقود بضغطة واحدة</p>
+      </a>
+      <a href="car.html" class="feature-card">
+        <div class="feature-icon">🚗</div>
+        <h3>إدارة سيارتك</h3>
+        <p>سجّل بيانات سيارتك واحتفظ بسجل كامل لصيانتها</p>
+      </a>
+      <a href="reports.html" class="feature-card">
+        <div class="feature-icon">📋</div>
+        <h3>تقارير مفصلة</h3>
+        <p>احتفظ بسجل كامل لصيانة سيارتك وتقاريرها الفنية</p>
+      </a>
+    </div>
+  </div>
+
+  <div class="how">
+    <h2>٤ خطوات بسيطة</h2>
+    <p>من إدخال الأعراض حتى الوصول لأقرب ورشة، كل شيء في دقائق</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">١</div>
+        <h3>سجّل سيارتك</h3>
+        <p>أنشئ حسابك وأضف بيانات سيارتك</p>
+      </div>
+      <div class="step">
+        <div class="step-num">٢</div>
+        <h3>اختر الأعراض</h3>
+        <p>حدد الأعراض التي تلاحظها على سيارتك</p>
+      </div>
+      <div class="step">
+        <div class="step-num">٣</div>
+        <h3>احصل على التشخيص</h3>
+        <p>استعرض الأسباب المحتملة والحلول فوراً</p>
+      </div>
+      <div class="step">
+        <div class="step-num">٤</div>
+        <h3>اعثر على ورشة</h3>
+        <p>اختر أقرب ورشة موثوقة وتواصل معها</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="cta" id="guestCta">
+    <h2>جاهز تعرف سبب عطل سيارتك؟</h2>
+    <p>سجّل الآن مجاناً وابدأ التشخيص في دقائق</p>
+    <a href="register.html" class="btn-primary">ابدأ الآن مجاناً</a>
+  </div>
+
+  <footer>
+    <p>© 2025 FixNeuro - Car Doctor. جميع الحقوق محفوظة</p>
+  </footer>
+
+  <script type="module">
+    import { supabase } from './database.js'
+
+    async function checkUser() {
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (user) {
+        document.getElementById('guestNav').style.display = 'none'
+        document.getElementById('userNav').style.display = 'flex'
+        document.getElementById('guestHero').style.display = 'none'
+        document.getElementById('guestCta').style.display = 'none'
+        document.getElementById('userWelcome').style.display = 'block'
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .single()
+
+        if (profile && profile.full_name) {
+          document.getElementById('welcomeName').innerText = `مرحباً ${profile.full_name} 👋`
+        }
+      }
+    }
+
+    window.logout = async function() {
+      await supabase.auth.signOut()
+      window.location.reload()
+    }
+
+    checkUser()
+  </script>
+
+</body>
+</html>
