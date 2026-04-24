@@ -6,96 +6,203 @@
   <title>FixNeuro - تسجيل الدخول</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a1628; color: white; min-height: 100vh; display: flex; flex-direction: column; }
-    nav { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: #0d1f3c; }
-    .logo { display: flex; align-items: center; gap: 10px; }
-    .logo span { font-size: 22px; font-weight: bold; }
-    .logo span em { color: #4db8ff; font-style: normal; }
-    .logo-icon { background: #1a6fd4; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-    .container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
-    .card { background: #0d1f3c; border-radius: 20px; padding: 40px; width: 100%; max-width: 420px; border: 1px solid #1a3a6b; }
-    .card-icon { width: 70px; height: 70px; background: rgba(26,111,212,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 0 auto 20px; }
-    .card h2 { text-align: center; font-size: 24px; margin-bottom: 8px; }
-    .card p { text-align: center; color: #aac4e0; font-size: 14px; margin-bottom: 30px; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; min-height: 100vh; display: flex; flex-direction: column; background: #050d1a; color: white; overflow-x: hidden; }
+    .bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; overflow: hidden; }
+    .bg-shape { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.15; }
+    .bg-shape-1 { width: 600px; height: 600px; background: #1a6fd4; top: -200px; left: -200px; animation: float1 8s ease-in-out infinite; }
+    .bg-shape-2 { width: 400px; height: 400px; background: #4db8ff; bottom: -100px; right: -100px; animation: float2 10s ease-in-out infinite; }
+    .bg-shape-3 { width: 300px; height: 300px; background: #0a3d7a; top: 50%; right: 20%; animation: float3 12s ease-in-out infinite; }
+    @keyframes float1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(30px,30px)} }
+    @keyframes float2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-30px,-20px)} }
+    @keyframes float3 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(20px,20px)} }
+    .tool-icon { position: absolute; font-size: 40px; opacity: 0.06; animation: floatTool 15s ease-in-out infinite; }
+    .tool-icon:nth-child(4) { top: 20%; right: 8%; }
+    .tool-icon:nth-child(5) { top: 65%; right: 85%; animation-delay: 4s; }
+    .tool-icon:nth-child(6) { top: 85%; right: 40%; animation-delay: 8s; }
+    @keyframes floatTool { 0%,100%{transform:translateY(0) rotate(0deg)} 50%{transform:translateY(-20px) rotate(10deg)} }
+    nav { position: relative; z-index: 10; display: flex; justify-content: space-between; align-items: center; padding: 18px 30px; background: rgba(5,13,26,0.8); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(77,184,255,0.1); }
+    .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+    .logo-icon { width: 38px; height: 38px; background: linear-gradient(135deg, #1a6fd4, #4db8ff); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .logo-text { font-size: 20px; font-weight: 800; color: white; }
+    .logo-text span { color: #4db8ff; }
+    .container { position: relative; z-index: 5; flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
+    .card { background: rgba(13,31,60,0.75); backdrop-filter: blur(30px); border-radius: 24px; padding: 45px 40px; width: 100%; max-width: 440px; border: 1px solid rgba(77,184,255,0.15); box-shadow: 0 25px 60px rgba(0,0,0,0.5); }
+    .card-header { text-align: center; margin-bottom: 35px; }
+    .card-icon { width: 75px; height: 75px; background: linear-gradient(135deg, rgba(26,111,212,0.4), rgba(77,184,255,0.3)); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 34px; margin: 0 auto 20px; border: 1px solid rgba(77,184,255,0.3); box-shadow: 0 8px 25px rgba(26,111,212,0.3); }
+    .card-header h2 { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
+    .card-header p { color: #7a9abf; font-size: 14px; }
+    .login-tabs { display: flex; gap: 8px; margin-bottom: 25px; background: rgba(10,25,50,0.5); border-radius: 12px; padding: 5px; }
+    .login-tab { flex: 1; padding: 10px; text-align: center; border-radius: 9px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s; color: #7a9abf; border: none; background: none; }
+    .login-tab.active { background: linear-gradient(135deg, #1a6fd4, #1558a8); color: white; box-shadow: 0 4px 15px rgba(26,111,212,0.3); }
     .form-group { margin-bottom: 20px; }
-    .form-group label { display: block; font-size: 14px; margin-bottom: 8px; color: #aac4e0; }
-    .form-group input { width: 100%; padding: 12px 15px; background: #162d52; border: 1px solid #1a3a6b; border-radius: 10px; color: white; font-size: 15px; outline: none; }
-    .form-group input:focus { border-color: #1a6fd4; }
-    .form-group input::placeholder { color: #5a7a9a; }
-    .forgot { text-align: left; margin-top: 5px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; color: #aac4e0; }
+    .input-wrapper { position: relative; }
+    .input-icon { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: #7a9abf; pointer-events: none; display: flex; }
+    .toggle-pass { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #7a9abf; display: flex; align-items: center; padding: 0; transition: color 0.2s; }
+    .toggle-pass:hover { color: #4db8ff; }
+    .form-group input { width: 100%; padding: 13px 42px 13px 42px; background: rgba(10,25,50,0.6); border: 1.5px solid rgba(77,184,255,0.1); border-radius: 12px; color: white; font-size: 15px; outline: none; transition: all 0.3s; }
+    .form-group input:focus { border-color: #1a6fd4; background: rgba(10,25,50,0.9); box-shadow: 0 0 0 3px rgba(26,111,212,0.1); }
+    .form-group input::placeholder { color: #2d4a6a; }
+    .field-error { font-size: 12px; color: #ff8080; margin-top: 6px; display: none; background: rgba(255,50,50,0.08); border: 1px solid rgba(255,50,50,0.2); padding: 7px 10px; border-radius: 8px; }
+    .forgot { text-align: left; margin-top: 8px; }
     .forgot a { color: #4db8ff; font-size: 13px; text-decoration: none; }
-    .btn-login { width: 100%; padding: 14px; background: #1a6fd4; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-    .btn-login:hover { background: #1558a8; }
-    .divider { text-align: center; color: #5a7a9a; margin: 20px 0; font-size: 13px; }
-    .register-link { text-align: center; font-size: 14px; color: #aac4e0; }
-    .register-link a { color: #4db8ff; text-decoration: none; font-weight: bold; }
-    .message { padding: 12px; border-radius: 8px; margin-bottom: 15px; text-align: center; font-size: 14px; display: none; }
-    .message.error { background: rgba(255,50,50,0.2); border: 1px solid #ff3232; color: #ff8080; }
-    .message.success { background: rgba(50,255,100,0.2); border: 1px solid #32ff64; color: #80ff80; }
-    footer { background: #0d1f3c; padding: 15px; text-align: center; color: #aac4e0; font-size: 13px; border-top: 1px solid #1a3a6b; }
+    .btn-login { width: 100%; padding: 15px; background: linear-gradient(135deg, #1a6fd4, #1558a8); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 10px; transition: all 0.3s; box-shadow: 0 8px 25px rgba(26,111,212,0.3); }
+    .btn-login:hover { transform: translateY(-2px); box-shadow: 0 12px 35px rgba(26,111,212,0.5); }
+    .divider { display: flex; align-items: center; gap: 15px; margin: 25px 0; }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.06); }
+    .divider span { color: #3d5a7a; font-size: 13px; }
+    .register-link { text-align: center; font-size: 14px; color: #7a9abf; }
+    .register-link a { color: #4db8ff; text-decoration: none; font-weight: 600; }
+    .message { padding: 13px 16px; border-radius: 10px; margin-bottom: 20px; text-align: center; font-size: 14px; display: none; }
+    .message.error { background: rgba(255,50,50,0.1); border: 1px solid rgba(255,50,50,0.3); color: #ff8080; }
+    .message.success { background: rgba(50,200,100,0.1); border: 1px solid rgba(50,200,100,0.3); color: #50c864; }
+    footer { position: relative; z-index: 5; background: rgba(5,13,26,0.8); padding: 18px; text-align: center; color: #3d5a7a; font-size: 13px; border-top: 1px solid rgba(255,255,255,0.03); }
   </style>
 </head>
 <body>
+  <div class="bg-canvas">
+    <div class="bg-shape bg-shape-1"></div>
+    <div class="bg-shape bg-shape-2"></div>
+    <div class="bg-shape bg-shape-3"></div>
+    <div class="tool-icon">⚙️</div>
+    <div class="tool-icon">🔧</div>
+    <div class="tool-icon">🛠️</div>
+  </div>
   <nav>
-    <div class="logo">
+    <a href="splash.html" class="logo">
       <div class="logo-icon">🔧</div>
-      <span>Fix<em>NEURO</em></span>
-    </div>
-    <a href="index.html" style="color:#aac4e0; text-decoration:none; font-size:14px;">الرئيسية</a>
+      <div class="logo-text">Fix<span>NEURO</span></div>
+    </a>
+    <a href="register.html" style="color:#4db8ff; text-decoration:none; font-size:14px; font-weight:600;">إنشاء حساب</a>
   </nav>
   <div class="container">
     <div class="card">
-      <div class="card-icon">🔑</div>
-      <h2>مرحباً بعودتك</h2>
-      <p>سجّل دخولك للوصول إلى حسابك</p>
+      <div class="card-header">
+        <div class="card-icon">🔑</div>
+        <h2>مرحباً بعودتك</h2>
+        <p>سجّل دخولك للوصول إلى حسابك</p>
+      </div>
       <div class="message" id="message"></div>
-      <div class="form-group">
-        <label>البريد الإلكتروني</label>
-        <input type="email" id="email" placeholder="example@email.com" />
+      <div class="login-tabs">
+        <button class="login-tab active" id="tabEmail" onclick="switchTab('email')">📧 بالإيميل</button>
+        <button class="login-tab" id="tabPhone" onclick="switchTab('phone')">📱 برقم الجوال</button>
+      </div>
+      <div id="emailSection">
+        <div class="form-group">
+          <label>البريد الإلكتروني</label>
+          <div class="input-wrapper">
+            <span class="input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
+            <input type="email" id="email" placeholder="example@email.com" style="padding-left:16px;" />
+          </div>
+          <div class="field-error" id="emailError"></div>
+        </div>
+      </div>
+      <div id="phoneSection" style="display:none;">
+        <div class="form-group">
+          <label>رقم الجوال</label>
+          <div class="input-wrapper">
+            <span class="input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></span>
+            <input type="tel" id="phoneLogin" placeholder="05xxxxxxxx" style="padding-left:16px;" />
+          </div>
+          <div class="field-error" id="phoneLoginError"></div>
+        </div>
       </div>
       <div class="form-group">
         <label>كلمة المرور</label>
-        <input type="password" id="password" placeholder="••••••••" />
-        <div class="forgot"><a href="#">نسيت كلمة المرور؟</a></div>
+        <div class="input-wrapper">
+          <span class="input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+          <input type="password" id="password" placeholder="••••••••" />
+          <button class="toggle-pass" id="togglePass" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <div class="field-error" id="passError"></div>
+        <div class="forgot"><a href="forgot-password.html">نسيت كلمة المرور؟</a></div>
       </div>
-      <button class="btn-login" onclick="login()">دخول</button>
-      <div class="divider">— أو —</div>
-      <div class="register-link">
-        ما عندك حساب؟ <a href="register.html">سجّل الآن</a>
-      </div>
+      <button class="btn-login" id="loginBtn">تسجيل الدخول</button>
+      <div class="divider"><span>أو</span></div>
+      <div class="register-link">ما عندك حساب؟ <a href="register.html">سجّل الآن مجاناً</a></div>
     </div>
   </div>
-  <footer>
-    <p>© 2025 FixNeuro - Car Doctor. جميع الحقوق محفوظة</p>
-  </footer>
+  <footer><p>©️ 2025 FixNeuro - Car Doctor. جميع الحقوق محفوظة</p></footer>
   <script type="module">
     import { supabase } from './database.js'
 
-    window.login = async function () {
-      const email = document.getElementById('email').value
+    const eyeOpen = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`
+    const eyeClosed = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`
+
+    let currentTab = 'email'
+
+    window.switchTab = function(tab) {
+      currentTab = tab
+      document.getElementById('tabEmail').classList.toggle('active', tab === 'email')
+      document.getElementById('tabPhone').classList.toggle('active', tab === 'phone')
+      document.getElementById('emailSection').style.display = tab === 'email' ? 'block' : 'none'
+      document.getElementById('phoneSection').style.display = tab === 'phone' ? 'block' : 'none'
+    }
+
+    document.getElementById('togglePass').addEventListener('click', function() {
+      const input = document.getElementById('password')
+      if (input.type === 'password') { input.type = 'text'; this.innerHTML = eyeClosed }
+      else { input.type = 'password'; this.innerHTML = eyeOpen }
+    })
+
+    document.getElementById('loginBtn').addEventListener('click', async function() {
       const password = document.getElementById('password').value
       const msg = document.getElementById('message')
+      msg.style.display = 'none'
+      document.querySelectorAll('.field-error').forEach(e => e.style.display = 'none')
 
-      if (!email || !password) {
-        msg.style.display = 'block'
-        msg.className = 'message error'
-        msg.innerText = 'يرجى إدخال البريد الإلكتروني وكلمة المرور'
+      if (!password) {
+        document.getElementById('passError').style.display = 'block'
+        document.getElementById('passError').textContent = '⚠️ يرجى إدخال كلمة المرور'
         return
+      }
+
+      let email = ''
+
+      if (currentTab === 'email') {
+        email = document.getElementById('email').value.trim()
+        if (!email) {
+          document.getElementById('emailError').style.display = 'block'
+          document.getElementById('emailError').textContent = '⚠️ يرجى إدخال البريد الإلكتروني'
+          return
+        }
+      } else {
+        const phone = document.getElementById('phoneLogin').value.trim()
+        if (!phone) {
+          document.getElementById('phoneLoginError').style.display = 'block'
+          document.getElementById('phoneLoginError').textContent = '⚠️ يرجى إدخال رقم الجوال'
+          return
+        }
+        // البحث عن الإيميل بناءً على رقم الجوال
+        const { data: profile } = await supabase.from('profiles').select('id').eq('phone', phone).maybeSingle()
+        if (!profile) {
+          document.getElementById('phoneLoginError').style.display = 'block'
+          document.getElementById('phoneLoginError').textContent = '⚠️ هذا الرقم غير مسجل'
+          return
+        }
+        // جلب الإيميل من auth
+        const { data: userData } = await supabase.auth.admin?.getUserById?.(profile.id) || {}
+        if (!userData?.user?.email) {
+          msg.style.display = 'block'; msg.className = 'message error'
+          msg.innerText = '❌ تعذر تسجيل الدخول برقم الجوال، استخدم الإيميل'
+          return
+        }
+        email = userData.user.email
       }
 
       const { error } = await supabase.auth.signInWithPassword({ email, password })
 
       if (error) {
-        msg.style.display = 'block'
-        msg.className = 'message error'
-        msg.innerText = 'البريد أو كلمة المرور غير صحيحة'
+        msg.style.display = 'block'; msg.className = 'message error'
+        msg.innerText = '❌ البريد أو كلمة المرور غير صحيحة'
       } else {
-        msg.style.display = 'block'
-        msg.className = 'message success'
-        msg.innerText = 'تم الدخول بنجاح! ✅'
+        msg.style.display = 'block'; msg.className = 'message success'
+        msg.innerText = '✅ تم الدخول بنجاح!'
         setTimeout(() => window.location.href = 'index.html', 1500)
       }
-    }
+    })
   </script>
 </body>
 </html>
