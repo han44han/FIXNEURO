@@ -7,7 +7,6 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', Arial, sans-serif; background: #050d1a; color: white; min-height: 100vh; }
-
     nav { display: flex; justify-content: space-between; align-items: center; padding: 18px 30px; background: rgba(5,13,26,0.95); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(77,184,255,0.1); }
     .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
     .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, #1a6fd4, #4db8ff); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 15px rgba(26,111,212,0.4); }
@@ -18,8 +17,6 @@
     .nav-links a:hover { color: #4db8ff; }
     .btn-nav { background: linear-gradient(135deg, #1a6fd4, #1558a8) !important; color: white !important; padding: 9px 22px; border-radius: 20px; font-weight: 600 !important; }
     .logout-btn { color: #ff6b6b !important; font-weight: 600 !important; }
-
-    /* GUEST */
     .hero { min-height: 100vh; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; background: radial-gradient(ellipse at 60% 50%, rgba(26,111,212,0.15) 0%, transparent 60%), #050d1a; }
     .hero-content { position: relative; z-index: 5; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; max-width: 1100px; margin: 0 auto; padding: 60px 30px; }
     .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(26,111,212,0.15); border: 1px solid rgba(77,184,255,0.3); padding: 8px 18px; border-radius: 50px; font-size: 13px; color: #4db8ff; margin-bottom: 25px; }
@@ -41,24 +38,15 @@
     .fb2 { bottom: 25%; left: -5%; animation-delay: 2s; }
     .fb3 { top: 45%; right: -12%; animation-delay: 1s; }
     @keyframes badgeFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-
-    /* DASHBOARD */
     .dashboard { max-width: 1100px; margin: 0 auto; padding: 40px 30px; display: none; }
-
-    /* Welcome Banner */
     .welcome-banner { background: linear-gradient(135deg, rgba(26,111,212,0.25) 0%, rgba(13,31,60,0.8) 100%); border-radius: 24px; padding: 35px 40px; border: 1px solid rgba(77,184,255,0.2); margin-bottom: 35px; display: flex; justify-content: space-between; align-items: center; position: relative; overflow: hidden; }
     .welcome-banner::before { content: ''; position: absolute; top: -50%; right: -10%; width: 300px; height: 300px; background: radial-gradient(circle, rgba(77,184,255,0.08), transparent); border-radius: 50%; }
     .welcome-left h2 { font-size: 32px; font-weight: 800; margin-bottom: 8px; }
     .welcome-left h2 span { color: #4db8ff; }
-    .welcome-left .user-info { display: flex; align-items: center; gap: 20px; margin-top: 12px; }
-    .user-info-item { display: flex; align-items: center; gap: 8px; background: rgba(26,111,212,0.15); border: 1px solid rgba(77,184,255,0.15); padding: 7px 14px; border-radius: 20px; font-size: 13px; color: #aac4e0; }
+    .welcome-left p { color: #7a9abf; font-size: 15px; margin-top: 5px; }
     .welcome-avatar { width: 80px; height: 80px; background: linear-gradient(135deg, #1a6fd4, #4db8ff); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; box-shadow: 0 10px 30px rgba(26,111,212,0.4); flex-shrink: 0; }
-
-    /* Section Title */
     .section-label { font-size: 13px; font-weight: 700; color: #7a9abf; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
     .section-label::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.06); }
-
-    /* Service Cards */
     .services-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 35px; }
     .service-card { background: rgba(13,31,60,0.7); border-radius: 22px; padding: 28px; text-decoration: none; color: white; border: 1px solid rgba(255,255,255,0.06); transition: all 0.3s; display: flex; flex-direction: column; gap: 14px; position: relative; overflow: hidden; }
     .service-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 22px 22px 0 0; opacity: 0; transition: opacity 0.3s; }
@@ -76,15 +64,11 @@
     .service-card h3 { font-size: 18px; font-weight: 700; }
     .service-card p { font-size: 13px; color: #7a9abf; line-height: 1.6; }
     .card-arrow { margin-top: auto; display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #4db8ff; }
-
-    /* Quick Stats */
     .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 35px; }
     .stat-box { background: rgba(13,31,60,0.6); border-radius: 18px; padding: 22px; border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 16px; }
     .stat-icon { font-size: 28px; }
     .stat-text .num { font-size: 28px; font-weight: 800; background: linear-gradient(135deg, #4db8ff, #1a6fd4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .stat-text .lbl { font-size: 13px; color: #7a9abf; margin-top: 3px; }
-
-    /* Features */
     .features-section { padding: 80px 30px; background: rgba(13,31,60,0.2); }
     .section-title { text-align: center; margin-bottom: 50px; }
     .section-title h2 { font-size: 34px; font-weight: 800; margin-bottom: 12px; }
@@ -95,35 +79,27 @@
     .feature-icon { width: 56px; height: 56px; border-radius: 16px; background: linear-gradient(135deg, rgba(26,111,212,0.3), rgba(77,184,255,0.2)); display: flex; align-items: center; justify-content: center; font-size: 26px; margin-bottom: 18px; }
     .feature-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 10px; }
     .feature-card p { color: #7a9abf; font-size: 14px; line-height: 1.7; }
-
-    /* Steps */
     .steps-section { padding: 80px 30px; }
     .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; max-width: 1000px; margin: 0 auto; }
     .step-card { background: rgba(13,31,60,0.5); border-radius: 20px; padding: 28px; text-align: center; border: 1px solid rgba(255,255,255,0.05); }
     .step-num { width: 54px; height: 54px; background: linear-gradient(135deg, #1a6fd4, #4db8ff); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; margin: 0 auto 16px; box-shadow: 0 6px 20px rgba(26,111,212,0.4); }
     .step-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
     .step-card p { color: #7a9abf; font-size: 13px; line-height: 1.6; }
-
-    /* CTA */
     .cta { padding: 80px 30px; text-align: center; background: radial-gradient(ellipse at center, rgba(26,111,212,0.1) 0%, transparent 70%); }
     .cta h2 { font-size: 36px; font-weight: 800; margin-bottom: 15px; }
     .cta p { color: #7a9abf; font-size: 16px; margin-bottom: 35px; }
-
     footer { background: rgba(5,13,26,0.95); padding: 22px; text-align: center; color: #3d5a7a; font-size: 13px; border-top: 1px solid rgba(255,255,255,0.04); }
-
     @media (max-width: 768px) {
       .hero-content { grid-template-columns: 1fr; text-align: center; }
       .hero-visual { display: none; }
       .hero h1 { font-size: 32px; }
       .hero-btns { justify-content: center; }
       .welcome-banner { flex-direction: column; gap: 20px; text-align: center; }
-      .user-info { justify-content: center; flex-wrap: wrap; }
       .dashboard { padding: 20px 15px; }
     }
   </style>
 </head>
 <body>
-
   <nav>
     <a href="index.html" class="logo">
       <div class="logo-icon">🔧</div>
@@ -134,7 +110,7 @@
       <a href="register.html" class="btn-nav">ابدأ مجاناً</a>
     </div>
     <div class="nav-links" id="userNav" style="display:none;">
-      <a href="car.html">🚗 سيارتي</a>
+      <a href="account.html">👤 حسابي</a>
       <a href="dia.html">🔍 تشخيص</a>
       <a href="map.html">📍 الورش</a>
       <a href="reports.html">📋 التقارير</a>
@@ -142,7 +118,7 @@
     </div>
   </nav>
 
-  <!-- ===== GUEST ===== -->
+  <!-- GUEST -->
   <div id="guestSection">
     <section class="hero">
       <div class="hero-content">
@@ -211,63 +187,49 @@
       <div class="features-grid">
         <a href="dia.html" class="feature-card"><div class="feature-icon">🤖</div><h3>تشخيص بالذكاء الاصطناعي</h3><p>أرسل وصف المشكلة أو صورة واحصل على تشخيص دقيق فوري</p></a>
         <a href="map.html" class="feature-card"><div class="feature-icon">🗺️</div><h3>خريطة الورش الموثوقة</h3><p>اعثر على أقرب ورشة في منطقتك مع التقييمات وأوقات العمل</p></a>
-        <a href="car.html" class="feature-card"><div class="feature-icon">🚗</div><h3>إدارة سياراتك</h3><p>سجّل بيانات سيارتك واحتفظ بسجل كامل للصيانة</p></a>
-        <a href="reports.html" class="feature-card"><div class="feature-icon">📊</div><h3>تقارير مفصلة</h3><p>استعرض تاريخ تشخيصاتك ومصاريف الصيانة</p></a>
+        <a href="reports.html" class="feature-card"><div class="feature-icon">📊</div><h3>تقارير مفصلة</h3><p>استعرض تاريخ تشخيصاتك ومصاريف الصيانة بشكل منظم</p></a>
+        <a href="account.html" class="feature-card"><div class="feature-icon">👤</div><h3>حسابك الشخصي</h3><p>أدر معلومات حسابك وبياناتك الشخصية بسهولة</p></a>
       </div>
     </section>
 
     <section class="steps-section">
-      <div class="section-title"><h2>كيف يعمل؟</h2><p>٤ خطوات بسيطة من العطل إلى الحل</p></div>
+      <div class="section-title"><h2>كيف يعمل؟</h2><p>٣ خطوات بسيطة من العطل إلى الحل</p></div>
       <div class="steps-grid">
-        <div class="step-card"><div class="step-num">١</div><h3>أنشئ حسابك</h3><p>سجّل مجاناً وأضف بيانات سيارتك</p></div>
+        <div class="step-card"><div class="step-num">١</div><h3>أنشئ حسابك</h3><p>سجّل مجاناً في ثوانٍ</p></div>
         <div class="step-card"><div class="step-num">٢</div><h3>صف المشكلة</h3><p>اكتب الأعراض أو ارفع صورة</p></div>
-        <div class="step-card"><div class="step-num">٣</div><h3>احصل على التشخيص</h3><p>الذكاء الاصطناعي يعطيك الأسباب والحلول</p></div>
-        <div class="step-card"><div class="step-num">٤</div><h3>اعثر على ورشة</h3><p>اختر أقرب ورشة موثوقة وتواصل معها</p></div>
+        <div class="step-card"><div class="step-num">٣</div><h3>احصل على الحل</h3><p>تشخيص فوري + أقرب ورشة</p></div>
       </div>
     </section>
 
     <section class="cta">
       <h2>جاهز تعرف سبب عطل سيارتك؟</h2>
-      <p>انضم الآن وابدأ التشخيص مجاناً في دقائق</p>
+      <p>انضم الآن وابدأ التشخيص مجاناً</p>
       <a href="register.html" class="btn-primary">ابدأ الآن مجاناً</a>
     </section>
   </div>
 
-  <!-- ===== DASHBOARD ===== -->
+  <!-- DASHBOARD -->
   <div class="dashboard" id="dashboardSection">
-
-    <!-- Welcome Banner -->
     <div class="welcome-banner">
       <div class="welcome-left">
         <h2>مرحباً، <span id="userName">...</span> 👋</h2>
-        <p style="color:#7a9abf; font-size:15px; margin-top:5px;">أهلاً بك في FixNeuro — ماذا تريد أن تفعل اليوم؟</p>
-        <div class="user-info" style="margin-top:15px; display:flex; gap:12px; flex-wrap:wrap;">
-          <div class="user-info-item">📧 <span id="userEmail">...</span></div>
-          <div class="user-info-item" id="userPhoneBox" style="display:none;">📱 <span id="userPhone">...</span></div>
-        </div>
+        <p>أهلاً بك في FixNeuro — ماذا تريد أن تفعل اليوم؟</p>
       </div>
       <div class="welcome-avatar">👤</div>
     </div>
 
-    <!-- Services -->
     <div class="section-label">الخدمات الرئيسية</div>
     <div class="services-grid">
       <a href="dia.html" class="service-card card-blue">
         <div class="service-icon-wrap bg-blue">🔍</div>
         <h3>تشخيص السيارة</h3>
-        <p>شخّص أي مشكلة بالنص أو الصورة واحصل على تحليل فوري من الذكاء الاصطناعي</p>
+        <p>شخّص أي مشكلة بالنص أو الصورة واحصل على تحليل فوري</p>
         <div class="card-arrow">ابدأ التشخيص ←</div>
-      </a>
-      <a href="car.html" class="service-card card-green">
-        <div class="service-icon-wrap bg-green">🚗</div>
-        <h3>سياراتي</h3>
-        <p>أضف بيانات سياراتك وتابع سجل الصيانة والأعطال السابقة</p>
-        <div class="card-arrow" style="color:#69f0ae;">إدارة السيارات ←</div>
       </a>
       <a href="map.html" class="service-card card-orange">
         <div class="service-icon-wrap bg-orange">📍</div>
         <h3>الورش القريبة</h3>
-        <p>اعثر على أقرب ورشة صيانة موثوقة في الرياض مع التقييمات والاتصال المباشر</p>
+        <p>اعثر على أقرب ورشة صيانة موثوقة مع التقييمات والاتصال</p>
         <div class="card-arrow" style="color:#ffab40;">عرض الخريطة ←</div>
       </a>
       <a href="reports.html" class="service-card card-purple">
@@ -276,15 +238,16 @@
         <p>راجع سجل تشخيصاتك ومصاريف الصيانة وتاريخ الأعطال</p>
         <div class="card-arrow" style="color:#e040fb;">عرض التقارير ←</div>
       </a>
+      <a href="account.html" class="service-card card-green">
+        <div class="service-icon-wrap bg-green">👤</div>
+        <h3>حسابي</h3>
+        <p>أدر معلومات حسابك وبياناتك الشخصية</p>
+        <div class="card-arrow" style="color:#69f0ae;">عرض الحساب ←</div>
+      </a>
     </div>
 
-    <!-- Stats -->
     <div class="section-label">إحصائياتي</div>
     <div class="stats-grid">
-      <div class="stat-box">
-        <div class="stat-icon">🚗</div>
-        <div class="stat-text"><div class="num" id="carsCount">0</div><div class="lbl">سياراتي المسجلة</div></div>
-      </div>
       <div class="stat-box">
         <div class="stat-icon">📋</div>
         <div class="stat-text"><div class="num" id="reportsCount">0</div><div class="lbl">تقاريري</div></div>
@@ -293,76 +256,40 @@
         <div class="stat-icon">🔍</div>
         <div class="stat-text"><div class="num" id="diagCount">0</div><div class="lbl">تشخيصاتي</div></div>
       </div>
+      <div class="stat-box">
+        <div class="stat-icon">📍</div>
+        <div class="stat-text"><div class="num">25</div><div class="lbl">ورشة متاحة</div></div>
+      </div>
     </div>
-
   </div>
 
-  <footer><p>© 2025 FixNeuro - Car Doctor. جميع الحقوق محفوظة</p></footer>
+  <footer><p>©️ 2025 FixNeuro - Car Doctor. جميع الحقوق محفوظة</p></footer>
 
   <script type="module">
     import { supabase } from './database.js'
-
     async function init() {
       try {
         const { data: { session } } = await supabase.auth.getSession()
-
         if (session && session.user) {
-          // إخفاء Guest وإظهار Dashboard
           document.getElementById('guestNav').style.display = 'none'
           document.getElementById('userNav').style.display = 'flex'
           document.getElementById('guestSection').style.display = 'none'
           document.getElementById('dashboardSection').style.display = 'block'
-
-          // بيانات المستخدم
           const user = session.user
-          document.getElementById('userEmail').innerText = user.email || ''
-
-          // جلب الـ profile
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('full_name, phone')
-            .eq('id', user.id)
-            .single()
-
-          if (profile?.full_name) {
-            document.getElementById('userName').innerText = profile.full_name
-          } else {
-            document.getElementById('userName').innerText = user.email?.split('@')[0] || 'مستخدم'
-          }
-
-          if (profile?.phone) {
-            document.getElementById('userPhone').innerText = profile.phone
-            document.getElementById('userPhoneBox').style.display = 'flex'
-          }
-
-          // عدد السيارات
-          const { count: carsCount } = await supabase
-            .from('cars').select('*', { count: 'exact', head: true })
-            .eq('user_id', user.id)
-          document.getElementById('carsCount').innerText = carsCount || 0
-
-          // عدد التقارير
-          const { count: reportsCount } = await supabase
-            .from('maintenance_reports').select('*', { count: 'exact', head: true })
-            .eq('user_id', user.id)
+          const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', user.id).single()
+          document.getElementById('userName').innerText = profile?.full_name || user.email?.split('@')[0] || 'مستخدم'
+          const { count: reportsCount } = await supabase.from('maintenance_reports').select('*', { count: 'exact', head: true }).eq('user_id', user.id)
           document.getElementById('reportsCount').innerText = reportsCount || 0
-
-          // عدد التشخيصات
-          const { count: diagCount } = await supabase
-            .from('diagnoses').select('*', { count: 'exact', head: true })
-            .eq('user_id', user.id)
+          const { count: diagCount } = await supabase.from('diagnoses').select('*', { count: 'exact', head: true }).eq('user_id', user.id)
           document.getElementById('diagCount').innerText = diagCount || 0
-
         }
-      } catch (e) { console.error(e) }
+      } catch(e) { console.error(e) }
     }
-
     document.getElementById('logoutBtn').addEventListener('click', async (e) => {
       e.preventDefault()
       await supabase.auth.signOut()
       window.location.href = 'splash.html'
     })
-
     init()
   </script>
 </body>
