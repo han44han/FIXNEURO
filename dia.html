@@ -15,19 +15,22 @@
     .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 24px; padding: 40px; backdrop-filter: blur(10px); }
     h1 { font-size: 28px; margin-bottom: 10px; text-align: center; background: linear-gradient(to right, #fff, #4db8ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     p.subtitle { text-align: center; color: #a0a0a0; margin-bottom: 30px; }
+    
     .input-group { margin-bottom: 25px; }
     label { display: block; margin-bottom: 10px; color: #4db8ff; font-weight: 500; }
-    textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid rgba(77,184,255,0.2); border-radius: 15px; padding: 20px; color: white; font-size: 16px; min-height: 120px; outline: none; }
-    <div class="input-group">
-  <label>فئة السيارة (لتحديد دقة السعر):</label>
-  <select id="carCategory" style="width: 100%; background: rgba(0,0,0,0.2); border: 1px solid rgba(77,184,255,0.2); border-radius: 15px; padding: 15px; color: white; font-size: 16px; outline: none; appearance: none;">
-    <option value="1">اقتصادية (تويوتا، هيونداي، كيا...)</option>
-    <option value="1.5">متوسطة / عائلية (تاهو، أفالون، مازدا CX9...)</option>
-    <option value="2.5">فاخرة (مرسيدس، بي إم دبليو، لكزس...)</option>
-  </select>
-</div>
-    .btn-check { width: 100%; background: linear-gradient(135deg, #1a6fd4, #4db8ff); color: white; border: none; border-radius: 15px; padding: 18px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+    
+    /* ستايل قائمة اختيار السيارة */
+    select { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(77,184,255,0.2); border-radius: 15px; padding: 15px; color: white; font-size: 16px; outline: none; cursor: pointer; margin-bottom: 10px; }
+    select option { background: #050d1a; color: white; }
+
+    textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid rgba(77,184,255,0.2); border-radius: 15px; padding: 20px; color: white; font-size: 16px; min-height: 120px; outline: none; transition: 0.3s; }
+    textarea:focus { border-color: #4db8ff; box-shadow: 0 0 10px rgba(77,184,255,0.2); }
+
+    /* الزر القديم الملون */
+    .btn-check { width: 100%; background: linear-gradient(135deg, #1a6fd4, #4db8ff); color: white; border: none; border-radius: 15px; padding: 18px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
     .btn-check:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(26,111,212,0.4); }
+    .btn-check:disabled { opacity: 0.6; cursor: not-allowed; }
+
     #resultItems { margin-top: 30px; }
   </style>
 </head>
@@ -43,27 +46,33 @@
 <div class="container">
   <div class="card">
     <h1>التشخيص الذكي بالذكاء الاصطناعي</h1>
-    <p class="subtitle">اكتب ما تشعر به في سيارتك وسيقوم النظام بتحليله فوراً</p>
+    <p class="subtitle">شخّص عطل سيارتك بدقة واحصل على التكلفة التقديرية</p>
 
     <div class="input-group">
-      <label>وصف المشكلة:</label>
-      <textarea id="accidentDescription" placeholder="مثال: أسمع صوت طقطقة في المكينة عند التشغيل..."></textarea>
+      <label>فئة السيارة:</label>
+      <select id="carCategory">
+        <option value="1">اقتصادية (تويوتا، هيونداي، كيا...)</option>
+        <option value="1.6">متوسطة / عائلية (تاهو، مازدا، فورد...)</option>
+        <option value="2.8">فاخرة (مرسيدس، لكزس، بي إم دبليو...)</option>
+      </select>
     </div>
 
-    
+    <div class="input-group">
+      <label>وصف المشكلة بالتفصيل:</label>
+      <textarea id="accidentDescription" placeholder="مثال: السيارة ترتفع حرارتها عند الوقوف..."></textarea>
+    </div>
+
+    <button id="mainBtn" class="btn-check" onclick="startDiagnosis()">🔍 شخّص المشكلة الآن</button>
 
     <div id="resultItems"></div>
   </div>
 </div>
 
-<button id="mainBtn" class="btn-check" onclick="startDiagnosis()">🔍 شخّص المشكلة الآن</button>
-
-<div id="resultItems"></div> <script type="module">
+<script type="module">
     import { startAnalysis } from './ai.js';
+    // ربط الدالة بالنافذة لتكون قابلة للاستدعاء من onclick
     window.startDiagnosis = startAnalysis;
 </script>
 
-</body>
-</html>
 </body>
 </html>
