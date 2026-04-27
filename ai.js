@@ -1,4 +1,4 @@
-const API_URL = "http://127.0.0.1:5000/check";
+const API_URL = "https://fixneuro.onrender.com";
 
 export async function startAnalysis() {
     const textInput = document.getElementById('accidentDescription');
