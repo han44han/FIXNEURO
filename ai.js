@@ -1,4 +1,5 @@
-const API_URL = "https://fixneuro.onrender.com";
+// تم تعديل الرابط بإضافة /check في النهاية
+const API_URL = "https://fixneuro.onrender.com/check";
 
 export async function startAnalysis() {
     const textInput = document.getElementById('accidentDescription');
@@ -17,13 +18,20 @@ export async function startAnalysis() {
     try {
         const response = await fetch(API_URL, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { 
+                "Content-Type": "application/json" 
+            },
             body: JSON.stringify({ text: textInput.value })
         });
 
+        // إذا السيرفر رد بخطأ
+        if (!response.ok) {
+            throw new Error('Server responded with error');
+        }
+
         const data = await response.json();
         
-        // التنسيق الجمالي للنتيجة
+        // التنسيق الجمالي للنتيجة بناءً على رد السيرفر
         if (data.prediction === "NEGATIVE") {
             resultDiv.innerHTML = `
                 <div style="background: rgba(255, 77, 77, 0.1); padding:25px; border-radius:20px; border:2px solid #ff4d4d; margin-top:20px; box-shadow: 0 0 15px rgba(255, 77, 77, 0.3);">
@@ -38,6 +46,7 @@ export async function startAnalysis() {
                 </div>`;
         }
     } catch (error) {
-        resultDiv.innerHTML = `<p style="color:#ff4d4d; text-align:center;">❌ فشل الاتصال بالسيرفر. تأكدي من تشغيل app.py</p>`;
+        console.error("Error details:", error);
+        resultDiv.innerHTML = `<p style="color:#ff4d4d; text-align:center;">❌ فشل الاتصال بالسيرفر السحابي. جربي مرة أخرى بعد قليل.</p>`;
     }
 }
