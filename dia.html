@@ -50,13 +50,15 @@
       <textarea id="accidentDescription" placeholder="مثال: أسمع صوت طقطقة في المكينة عند التشغيل..."></textarea>
     </div>
 
-    <button id="mainBtn" class="btn-check" onclick="startDiagnosis()">🔍 شخّص المشكلة الآن</button>
+    
 
     <div id="resultItems"></div>
   </div>
 </div>
 
-<script type="module">
+<button id="mainBtn" class="btn-check" onclick="startDiagnosis()">🔍 شخّص المشكلة الآن</button>
+
+<div id="resultItems"></div> <script type="module">
     import { startAnalysis } from './ai.js';
     window.startDiagnosis = startAnalysis;
 </script>
