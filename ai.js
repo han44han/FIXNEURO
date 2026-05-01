@@ -1,7 +1,7 @@
 import { supabase } from './database.js';
 
 // الرابط الخاص بسيرفرك على Render (تأكد من تغييره للرابط الفعلي بعد الرفع)
-const API_BASE_URL = "https://fixneuro.onrender.com";
+const API_BASE_URL = "https://aviation-accent-amulet.ngrok-free.dev";
 
 // --- 1. التشخيص النصي (بدون تعديل في المنطق الأصلي) ---
 export async function diagnoseText() {
