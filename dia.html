@@ -1,117 +1,126 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FixNeuro - تشخيص السيارة</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; background: #050d1a; color: white; min-height: 100vh; display: flex; flex-direction: column; }
-    nav { display: flex; justify-content: space-between; align-items: center; padding: 18px 30px; background: rgba(5,13,26,0.9); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(77,184,255,0.1); position: sticky; top: 0; z-index: 100; }
-    .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
-    .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, #1a6fd4, #4db8ff); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-    .logo-text { font-size: 22px; font-weight: bold; color: white; }
-    .container { flex: 1; max-width: 800px; margin: 40px auto; padding: 0 20px; width: 100%; }
-    .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 24px; padding: 40px; backdrop-filter: blur(10px); }
-    h1 { font-size: 28px; margin-bottom: 10px; text-align: center; background: linear-gradient(to right, #fff, #4db8ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    p.subtitle { text-align: center; color: #a0a0a0; margin-bottom: 30px; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تشخيص أضرار المركبة | AI Analysis</title>
     
-    .tabs-container { display: flex; background: rgba(0, 0, 0, 0.3); border-radius: 15px; padding: 5px; margin-bottom: 25px; border: 1px solid rgba(77,184,255,0.1); }
-    .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; background: transparent; color: white; cursor: pointer; font-weight: bold; transition: 0.3s; font-size: 16px; }
-    .tab-btn.active { background: linear-gradient(135deg, #1a6fd4, #4db8ff); color: #000; }
+    <!-- 1. استدعاء مكتبة TensorFlow.js (ضروري جداً قبل ai.js) -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
 
-    .input-group { margin-bottom: 25px; transition: 0.3s ease-in-out; }
-    label { display: block; margin-bottom: 10px; color: #4db8ff; font-weight: 500; }
-    
-    select, textarea, .file-input { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid rgba(77,184,255,0.2); border-radius: 15px; padding: 15px; color: white; font-size: 16px; outline: none; }
-    textarea { min-height: 120px; }
-    .file-input { padding: 20px; border-style: dashed; cursor: pointer; }
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0d1117;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-    .btn-check { width: 100%; background: linear-gradient(135deg, #1a6fd4, #4db8ff); color: white; border: none; border-radius: 15px; padding: 18px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
-    .btn-check:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(26,111,212,0.4); }
+        .container {
+            max-width: 500px;
+            width: 100%;
+            background: #161b22;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid #30363d;
+        }
 
-    #resultItems { margin-top: 30px; }
-  </style>
+        h2 {
+            text-align: center;
+            color: #58a6ff;
+            margin-bottom: 25px;
+        }
+
+        .upload-section {
+            border: 2px dashed #30363d;
+            padding: 30px;
+            text-align: center;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-bottom: 20px;
+        }
+
+        .upload-section:hover {
+            border-color: #58a6ff;
+            background: #1c2128;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .main-btn {
+            width: 100%;
+            background: #238636;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .main-btn:disabled {
+            background: #216e39;
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        #resultItems {
+            margin-top: 20px;
+        }
+
+        .preview-img {
+            max-width: 100%;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: none;
+        }
+    </style>
 </head>
 <body>
 
-<nav>
-  <a href="index.html" class="logo">
-    <div class="logo-icon">⚙️</div>
-    <span class="logo-text">FixNeuro</span>
-  </a>
-</nav>
+    <div class="container">
+        <h2>🔍 فحص الذكاء الاصطناعي</h2>
 
-<div class="container">
-  <div class="card">
-    <h1>التشخيص الذكي</h1>
-    <p class="subtitle">اختر "نص" للكتابة أو "صورة" للرفع</p>
+        <div class="upload-section" onclick="document.getElementById('carImage').click()">
+            <p>اضغط لرفع صورة الحادث</p>
+            <small style="color: #8b949e;">يدعم PNG, JPG (Mask R-CNN Ready)</small>
+            <input type="file" id="carImage" accept="image/*" onchange="previewImage(this)">
+            <img id="imgPreview" class="preview-img" alt="معاينة الصورة">
+        </div>
 
-    <div class="tabs-container">
-      <button class="tab-btn active" id="btnText" onclick="switchMode('text')">نص</button>
-      <button class="tab-btn" id="btnImage" onclick="switchMode('image')">صورة</button>
+        <button id="mainBtn" class="main-btn" onclick="startAnalysis()">🔍 شخّص المشكلة الآن</button>
+
+        <div id="resultItems">
+            <!-- النتائج ستظهر هنا عبر ملف ai.js -->
+        </div>
     </div>
 
-    <!-- قسم فئة السيارة (سيختفي في حال اختيار صورة) -->
-    <div class="input-group" id="categoryGroup">
-      <label>فئة السيارة:</label>
-      <select id="carCategory">
-        <option value="1">اقتصادية</option>
-        <option value="1.6">متوسطة / عائلية</option>
-        <option value="2.8">فاخرة</option>
-      </select>
-    </div>
+    <!-- 2. استدعاء ملف البرمجة الخاص بك كـ Module -->
+    <script type="module" src="ai.js"></script>
 
-    <!-- مدخل النص -->
-    <div class="input-group" id="textInputGroup">
-      <label>وصف المشكلة:</label>
-      <textarea id="accidentDescription" placeholder="مثال: صوت طقطقة في المكينة..."></textarea>
-    </div>
-
-    <!-- مدخل الصورة -->
-    <div class="input-group" id="imageInputGroup" style="display: none;">
-      <label>ارفع صورة العطل:</label>
-      <input type="file" id="carImage" class="file-input" accept="image/*">
-    </div>
-
-    <button id="mainBtn" class="btn-check" onclick="startDiagnosis()">🔍 شخّص المشكلة الآن</button>
-
-    <div id="resultItems"></div>
-  </div>
-</div>
-
-<script>
-    function switchMode(mode) {
-        const textGroup = document.getElementById('textInputGroup');
-        const imageGroup = document.getElementById('imageInputGroup');
-        const categoryGroup = document.getElementById('categoryGroup'); // قسم الفئة
-        const btnText = document.getElementById('btnText');
-        const btnImage = document.getElementById('btnImage');
-
-        if (mode === 'text') {
-            textGroup.style.display = 'block';
-            categoryGroup.style.display = 'block'; // أظهر الفئة في النص
-            imageGroup.style.display = 'none';
-            btnText.classList.add('active');
-            btnImage.classList.remove('active');
-        } else {
-            textGroup.style.display = 'none';
-            categoryGroup.style.display = 'none'; // أخفِ الفئة في الصورة
-            imageGroup.style.display = 'block';
-            btnImage.classList.add('active');
-            btnText.classList.remove('active');
+    <script>
+        // دالة بسيطة لمعاينة الصورة قبل التحليل
+        function previewImage(input) {
+            const preview = document.getElementById('imgPreview');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
         }
-    }
-</script>
-
-<script type="module">
-    import { startAnalysis } from './ai.js';
-    window.startDiagnosis = startAnalysis;
-</script>
-<!-- استدعاء مكتبة TensorFlow.js -->
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
-
-<!-- ملفك البرمجي (تأكدي أنه تحت رابط المكتبة) -->
-<script type="module" src="ai.js"></script>
+    </script>
 </body>
 </html>
