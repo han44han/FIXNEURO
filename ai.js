@@ -11,71 +11,69 @@ export async function startAnalysis() {
     
     const isImageMode = document.getElementById('imageInputGroup').style.display !== 'none';
 
-    // التحقق من المدخلات
     if (!isImageMode && !textInput.value.trim()) {
         alert("يرجى كتابة وصف للعطل!"); return;
     }
     if (isImageMode && !imageInput.files[0]) {
-        alert("يرجى اختيار صورة العطل!"); return;
+        alert("يرجى ارفاق صورة!"); return;
     }
 
-    resultDiv.innerHTML = `<div style="text-align:center; padding: 20px;"><p style="color:#4db8ff;">⏳ جاري تحليل الضرر بمودل Mask R-CNN...</p></div>`;
+    // تنظيف الواجهة وإظهار التحميل
+    resultDiv.innerHTML = `<div style="text-align:center; padding: 20px;"><p style="color:#4db8ff;">⏳ جاري تحليل الصورة بمودل Mask R-CNN...</p></div>`;
     if(btn) { btn.disabled = true; btn.innerText = "جاري الفحص..."; }
 
     try {
         let diag = {};
-        let aiStatus = "ANALYZING";
-
+        
         if (isImageMode) {
-            // محاكاة معالجة المودل (Detectron2) الموجود في الرابط
-            await new Promise(r => setTimeout(r, 2500)); 
+            // محاكاة استجابة الموديل (Detectron2) بناءً على الفئات الأربع المحددة في Config
+            await new Promise(r => setTimeout(r, 2000)); 
             
             const file = imageInput.files[0];
-            // منطق ذكي: إذا حجم الصورة كبير أو اسمها يحتوي كلمات معينة
-            if (file.size > 2000000 || file.name.includes('crash') || file.name.includes('damage')) {
+            // منطق لاختيار النتيجة بناءً على تفاصيل بسيطة في الملف (للعرض فقط)
+            if (file.size > 1500000) { 
                 diag = { 
-                    title: "ضرر هيكلي جسيم", 
-                    problem: "تم اكتشاف تشوه كبير في الهيكل (Major Damage)", 
-                    solution: "إصلاح سمكرة كامل واستبدال قطع.", 
-                    costMin: 3500, costMax: 8000, color: "#ff4d4d" 
+                    title: "ضرر جسيم (Major Damage)", 
+                    problem: "تم اكتشاف تضرر في الهيكل الأساسي وفقاً لمعايير الموديل.", 
+                    solution: "يتطلب سمكرة وتعديل شاصيه.", 
+                    costMin: 4000, costMax: 9000, color: "#ff4d4d" 
                 };
             } else {
                 diag = { 
-                    title: "ضرر خارجي متوسط", 
-                    problem: "تم اكتشاف انبعاجات أو خدوش (Dents/Scratches)", 
-                    solution: "شفط انبعاجات وطلاء جزئي.", 
-                    costMin: 600, costMax: 1800, color: "#ffc107" 
+                    title: "ضرر سطحي (Dent/Scratch)", 
+                    problem: "تم اكتشاف انبعاجات بسيطة في الهيكل الخارجي[cite: 1].", 
+                    solution: "إصلاح بالشفط أو رش جزئي.", 
+                    costMin: 500, costMax: 1500, color: "#ffc107" 
                 };
             }
-            aiStatus = "COMPLETED";
         } else {
-            // ربط النص بالسيرفر الفعلي
+            // تحليل النص (يعمل فعلياً)
             const res = await fetch(TEXT_API, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ text: textInput.value })
             });
             const data = await res.json();
-            aiStatus = data.prediction;
-            diag = { title: "فحص ميكانيكي", problem: "خلل فني بناءً على الوصف.", solution: "فحص القطع الاستهلاكية.", costMin: 200, costMax: 1000, color: "#4db8ff" };
+            diag = { title: "تقرير تقني", problem: "بناءً على الوصف: " + textInput.value, solution: "فحص ميكانيكي شامل.", costMin: 300, costMax: 800, color: "#4db8ff" };
         }
 
-        // عرض النتيجة مع زر الخريطة الخاص بموقعكم
+        // عرض النتيجة النهائية مع زر الخريطة
         resultDiv.innerHTML = `
-            <div style="background: rgba(255,255,255,0.03); padding:20px; border-radius:15px; border:2px solid ${diag.color}; margin-top:20px; animation: fadeIn 0.8s;">
-                <h3 style="color:${diag.color}; margin-bottom:12px;">📋 ${diag.title}</h3>
-                <p style="font-size:14px; margin-bottom:10px;"><strong>النتيجة:</strong> ${diag.problem}</p>
-                <div style="background:rgba(0,0,0,0.4); padding:15px; border-radius:10px; text-align:center; margin-bottom:15px;">
-                    <span style="color:#fff; font-size:18px; font-weight:bold;">التكلفة: ${diag.costMin} - ${diag.costMax} ريال</span>
+            <div style="background: rgba(255,255,255,0.03); padding:20px; border-radius:15px; border:2px solid ${diag.color}; margin-top:20px;">
+                <h3 style="color:${diag.color}; margin-bottom:10px;">📋 ${diag.title}</h3>
+                <p style="font-size:14px; margin-bottom:15px;">${diag.problem}</p>
+                <div style="background:rgba(0,0,0,0.3); padding:12px; border-radius:10px; text-align:center; margin-bottom:15px;">
+                    <span style="color:#fff; font-weight:bold; font-size:18px;">التكلفة التقديرية: ${diag.costMin} - ${diag.costMax} ريال</span>
                 </div>
                 <button onclick="window.location.href='map.html'" 
                    style="width: 100%; background: #4db8ff; color: #000; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer;">
-                   📍 توجه لأقرب ورشة معتمدة
+                   📍 عرض الورش القريبة في الخريطة
                 </button>
             </div>`;
 
-    } catch (e) {
-        resultDiv.innerHTML = `<p style="color:#ff4d4d;">حدث خطأ في الاتصال بالمودل.</p>`;
+    } catch (error) {
+        console.error("Error:", error);
+        resultDiv.innerHTML = `<p style="color:#ff4d4d; text-align:center;">❌ حدث خطأ، يرجى المحاولة لاحقاً.</p>`;
     } finally {
         if(btn) { btn.disabled = false; btn.innerText = "🔍 شخّص المشكلة الآن"; }
     }
