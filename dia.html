@@ -68,16 +68,28 @@
       <textarea id="accidentDescription" placeholder="مثال: صوت طقطقة في المكينة..."></textarea>
     </div>
 
-    <!-- مدخل الصورة -->
-    <div class="input-group" id="imageInputGroup" style="display: none;">
-      <label>ارفع صورة العطل:</label>
-      <input type="file" id="carImage" class="file-input" accept="image/*">
-    </div>
+    <!-- قسم تشخيص النص -->
+<div id="text-section" class="input-group">
+    <h3>وصف المشكلة نصياً</h3>
+    <textarea id="issue-description" placeholder="مثال: أسمع صوت طقطقة في المساعدات..."></textarea>
+    <!-- زر خاص بالنص فقط -->
+    <button type="button" onclick="diagnoseByText()" class="btn-primary">شخّص النص الآن ✍️</button>
+</div>
 
-    <button id="mainBtn" class="btn-check" onclick="startDiagnosis()">🔍 شخّص المشكلة الآن</button>
+<hr style="border: 0.5px solid #333; margin: 30px 0;">
 
-    <div id="resultItems"></div>
-  </div>
+<!-- قسم تشخيص الصورة -->
+<div id="image-section" class="input-group">
+    <h3>ارفع صورة العطل</h3>
+    <input type="file" id="carImage" accept="image/*">
+    <!-- زر خاص بالصورة فقط -->
+    <button type="button" onclick="diagnoseByImage()" class="btn-secondary">شخّص الصورة الآن 📷</button>
+</div>
+
+<!-- مكان عرض النتيجة (موحد) -->
+<div id="result-display" style="display:none;">
+    <img id="output-image" src="" style="width:100%; display:none; border-radius:10px;">
+    <p id="diagnosis-result"></p>
 </div>
 
 <script>
