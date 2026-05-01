@@ -24,13 +24,14 @@
     label { display: block; margin-bottom: 10px; color: #4db8ff; font-weight: 500; }
     
     select, textarea, .file-input { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid rgba(77,184,255,0.2); border-radius: 15px; padding: 15px; color: white; font-size: 16px; outline: none; }
-    textarea { min-height: 120px; }
+    textarea { min-height: 120px; border-style: solid; }
     .file-input { padding: 20px; border-style: dashed; cursor: pointer; }
 
     .btn-check { width: 100%; background: linear-gradient(135deg, #1a6fd4, #4db8ff); color: white; border: none; border-radius: 15px; padding: 18px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
     .btn-check:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(26,111,212,0.4); }
 
-    #resultItems { margin-top: 30px; }
+    #result-box { margin-top: 30px; display: none; }
+    #res-img { margin-top: 15px; width: 100%; display: none; border-radius: 15px; border: 1px solid #4db8ff; }
   </style>
 </head>
 <body>
@@ -48,11 +49,11 @@
     <p class="subtitle">اختر "نص" للكتابة أو "صورة" للرفع</p>
 
     <div class="tabs-container">
-      <button class="tab-btn active" id="btnText" onclick="switchMode('text')">نص</button>
-      <button class="tab-btn" id="btnImage" onclick="switchMode('image')">صورة</button>
+      <button class="tab-btn active" id="btnText">نص</button>
+      <button class="tab-btn" id="btnImage">صورة</button>
     </div>
 
-    <!-- قسم فئة السيارة (سيختفي في حال اختيار صورة) -->
+    <!-- قسم فئة السيارة -->
     <div class="input-group" id="categoryGroup">
       <label>فئة السيارة:</label>
       <select id="carCategory">
@@ -65,48 +66,66 @@
     <!-- مدخل النص -->
     <div class="input-group" id="textInputGroup">
       <label>وصف المشكلة:</label>
-      <textarea id="accidentDescription" placeholder="مثال: صوت طقطقة في المكينة..."></textarea>
+      <textarea id="text-input" placeholder="مثال: صوت طقطقة في المكينة..."></textarea>
     </div>
 
     <!-- مدخل الصورة -->
     <div class="input-group" id="imageInputGroup" style="display: none;">
       <label>ارفع صورة العطل:</label>
-      <input type="file" id="carImage" class="file-input" accept="image/*">
+      <input type="file" id="image-input" class="file-input" accept="image/*">
     </div>
 
-    <button id="mainBtn" class="btn-check" onclick="startDiagnosis()">🔍 شخّص المشكلة الآن</button>
+    <!-- زر التشخيص الموحد -->
+    <button id="mainBtn" class="btn-check">🔍 شخّص المشكلة الآن</button>
 
-    <div id="resultItems"></div>
+    <!-- حاوية النتائج -->
+    <div id="result-box">
+        <div id="res-text"></div>
+        <img id="res-img" src="" alt="معاينة الصورة">
+    </div>
   </div>
 </div>
 
 <script>
-    function switchMode(mode) {
-        const textGroup = document.getElementById('textInputGroup');
-        const imageGroup = document.getElementById('imageInputGroup');
-        const categoryGroup = document.getElementById('categoryGroup'); // قسم الفئة
-        const btnText = document.getElementById('btnText');
-        const btnImage = document.getElementById('btnImage');
+    // تبديل الواجهة بين النص والصورة
+    const btnText = document.getElementById('btnText');
+    const btnImage = document.getElementById('btnImage');
+    const textGroup = document.getElementById('textInputGroup');
+    const imageGroup = document.getElementById('imageInputGroup');
+    const categoryGroup = document.getElementById('categoryGroup');
+    let currentMode = 'text';
 
-        if (mode === 'text') {
-            textGroup.style.display = 'block';
-            categoryGroup.style.display = 'block'; // أظهر الفئة في النص
-            imageGroup.style.display = 'none';
-            btnText.classList.add('active');
-            btnImage.classList.remove('active');
-        } else {
-            textGroup.style.display = 'none';
-            categoryGroup.style.display = 'none'; // أخفِ الفئة في الصورة
-            imageGroup.style.display = 'block';
-            btnImage.classList.add('active');
-            btnText.classList.remove('active');
-        }
-    }
+    btnText.onclick = () => {
+        currentMode = 'text';
+        textGroup.style.display = 'block';
+        categoryGroup.style.display = 'block';
+        imageGroup.style.display = 'none';
+        btnText.classList.add('active');
+        btnImage.classList.remove('active');
+    };
+
+    btnImage.onclick = () => {
+        currentMode = 'image';
+        textGroup.style.display = 'none';
+        categoryGroup.style.display = 'none';
+        imageGroup.style.display = 'block';
+        btnImage.classList.add('active');
+        btnText.classList.remove('active');
+    };
 </script>
 
 <script type="module">
-    import { startAnalysis } from './ai.js';
-    window.startDiagnosis = startAnalysis;
+    import { diagnoseText, diagnoseImage } from './ai.js';
+    
+    // ربط الزر بالدالة المناسبة بناءً على الوضع المختار
+    document.getElementById('mainBtn').addEventListener('click', () => {
+        const btnText = document.getElementById('btnText');
+        if (btnText.classList.contains('active')) {
+            diagnoseText();
+        } else {
+            diagnoseImage();
+        }
+    });
 </script>
 
 </body>
