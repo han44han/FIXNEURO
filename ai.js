@@ -1,104 +1,111 @@
-// ملاحظة: تأكدي من إضافة سطر سكريبت TensorFlow في ملف HTML قبل هذا الملف
+import { supabase } from './database.js';
+
+const API_URL = "https://fixneuro.onrender.com/check";
 
 export async function startAnalysis() {
-    const imageInput = document.getElementById('carImage');
+    const textInput = document.getElementById('accidentDescription');
     const resultDiv = document.getElementById('resultItems');
     const btn = document.getElementById('mainBtn');
-    
-    if (!imageInput.files[0]) {
-        alert("يرجى اختيار صورة أولاً!"); 
+    const carCategory = document.getElementById('carCategory');
+
+    if (!textInput || !textInput.value.trim()) {
+        alert("يرجى كتابة وصف للعطل أولاً!");
         return;
     }
 
-    // إظهار حالة التحليل
-    resultDiv.innerHTML = `<div style="text-align:center; padding: 20px;"><p style="color:#4db8ff;">⏳ جاري استدعاء مصفوفة البيانات (Neural Inference)...</p></div>`;
-    if(btn) { btn.disabled = true; btn.innerText = "جاري التحليل..."; }
-
-    const file = imageInput.files[0];
+    // 1. تصفير النتيجة القديمة وتعطيل الزر
+    resultDiv.innerHTML = ""; 
+    resultDiv.innerHTML = `<div style="text-align:center; padding: 20px;"><p style="color:#4db8ff;">⏳ جاري التحليل المختصر...</p></div>`;
+    if(btn) { btn.disabled = true; btn.innerText = "جاري الفحص..."; }
 
     try {
-        // --- الجزء الأول: محاولة استخدام الذكاء الاصطناعي الحقيقي (TensorFlow) ---
-        if (typeof tf !== 'undefined') {
-            console.log("TF.js detected. Attempting Deep Learning inference...");
-            // هنا الموديل المفروض يكون في مجلد اسمه model
-            // const model = await tf.loadLayersModel('./model/model.json'); 
+        const response = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: textInput.value })
+        });
+
+        const data = await response.json();
+        const aiStatus = data.prediction; 
+        const userText = textInput.value.toLowerCase();
+        const multiplier = parseFloat(carCategory.value) || 1;
+
+        // 2. محرك التشخيص المختصر
+        let diag = {
+            title: "فحص تقني",
+            problem: "خلل يحتاج فحص كمبيوتر.",
+            solution: "توجه لأقرب مركز صيانة.",
+            costMin: 150, costMax: 400,
+            color: aiStatus === "NEGATIVE" ? "#ff4d4d" : "#4db8ff",
+            status: aiStatus === "NEGATIVE" ? "pending" : "completed"
+        };
+
+        if (userText.includes("حرارة") || userText.includes("ترتفع")) {
+            diag = {
+                title: "منظومة التبريد",
+                problem: "احتمال تهريب ماء أو عطل مراوح.",
+                solution: "افحص الرديتر فوراً وتجنب القيادة.",
+                costMin: 400, costMax: 2000,
+                color: "#ff4d4d", status: "pending"
+            };
+        } else if (userText.includes("طقطقه") || userText.includes("صوت") || userText.includes("مكينة")) {
+            diag = {
+                title: "ميكانيكا المحرك",
+                problem: "خلل داخلي أو نقص في ضغط الزيت.",
+                solution: "افحص مستوى الزيت وطرمبة الزيت.",
+                costMin: 1500, costMax: 7000,
+                color: "#ff4d4d", status: "pending"
+            };
+        } else if (userText.includes("قير") || userText.includes("نتعه")) {
+            diag = {
+                title: "ناقل الحركة",
+                problem: "اتساخ زيت القير أو عطل حساسات.",
+                solution: "افحص زيت القير والفلتر بالكمبيوتر.",
+                costMin: 600, costMax: 4000,
+                color: "#ff4d4d", status: "pending"
+            };
+        } else if (userText.includes("مكيف") || userText.includes("حر")) {
+            diag = {
+                title: "نظام التكييف",
+                problem: "نقص فريون أو اتساخ الفلتر.",
+                solution: "فحص التهريب وتنظيف الفلتر.",
+                costMin: 200, costMax: 1500,
+                color: "#4db8ff", status: "completed"
+            };
         }
 
-        // --- الجزء الثاني: تحليل بصمة الضرر (Image Processing Logic) ---
-        // هذا الجزء يضمن إن الموقع يشتغل حتى لو الموديل الثقيل ما تحمل
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const img = new Image();
-            img.src = e.target.result;
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                canvas.width = 100; canvas.height = 100;
-                ctx.drawImage(img, 0, 0, 100, 100);
-                
-                // فحص المناطق: منتصف (أبواب) مقابل أسفل (مصد)
-                const pixels = ctx.getImageData(0, 0, 100, 100).data;
-                let midZoneImpact = 0; 
-                let lowZoneImpact = 0;
+        // حساب السعر النهائي
+        const finalMin = Math.round(diag.costMin * multiplier);
+        const finalMax = Math.round(diag.costMax * multiplier);
 
-                for (let i = 0; i < pixels.length; i += 20) {
-                    const r = pixels[i], g = pixels[i+1], b = pixels[i+2];
-                    const brightness = (r + g + b) / 3;
-                    const y = Math.floor((i / 4) / 100);
+        // 3. عرض النتيجة النهائية (مختصرة وأنيقة)
+        resultDiv.innerHTML = `
+            <div style="background: rgba(255,255,255,0.03); padding:20px; border-radius:15px; border:2px solid ${diag.color}; margin-top:20px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <h3 style="color:${diag.color}; margin:0;">📋 ${diag.title}</h3>
+                    <span style="font-size:12px; color:${diag.color}; border:1px solid; padding:2px 8px; border-radius:5px;">AI: ${aiStatus}</span>
+                </div>
+                <p style="font-size:14px; margin-bottom:5px;"><strong>المشكلة:</strong> ${diag.problem}</p>
+                <p style="font-size:14px; margin-bottom:15px;"><strong>الحل:</strong> ${diag.solution}</p>
+                <div style="background:rgba(0,0,0,0.3); padding:10px; border-radius:8px; text-align:center;">
+                    <span style="color:#fff; font-weight:bold;">التكلفة: ${finalMin.toLocaleString()} - ${finalMax.toLocaleString()} ريال</span>
+                </div>
+            </div>`;
 
-                    // اكتشاف التباين العالي (دليل الحطام أو الصدمة)
-                    if (brightness < 70 || brightness > 220) {
-                        if (y > 30 && y < 70) midZoneImpact++; 
-                        if (y >= 70) lowZoneImpact++;
-                    }
-                }
-
-                let diag = {};
-                // اتخاذ القرار بناءً على كثافة الضرر المكتشف
-                if (midZoneImpact > lowZoneImpact) {
-                    diag = {
-                        location: "الهيكل الجانبي (Side Doors)",
-                        class: "Class 1: Major Side Impact",
-                        problem: "تم رصد تهشم في منطقة الأبواب الجانبية وتضرر الرفارف.",
-                        solution: "استبدال الأبواب المتضررة ومعايرة زوايا الهيكل.",
-                        costMin: 4500, costMax: 11000, color: "#ff4d4d", conf: 98.4
-                    };
-                } else {
-                    diag = {
-                        location: "مقدمة المركبة (Frontal)",
-                        class: "Class 2: Bumper/Grill Damage",
-                        problem: "اكتشاف كسر في المصد الأمامي وتضرر نظام الإضاءة الأمامي.",
-                        solution: "إصلاح المصد (سمكرة) وتغيير الشمعات المتضررة.",
-                        costMin: 1500, costMax: 3500, color: "#ffc107", conf: 94.2
-                    };
-                }
-
-                // عرض النتيجة النهائية بتصميم احترافي
-                resultDiv.innerHTML = `
-                    <div style="background: rgba(255,255,255,0.03); padding:20px; border-radius:15px; border:2px solid ${diag.color}; margin-top:20px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                            <h3 style="color:${diag.color}; margin:0; font-size:16px;">🔍 نتيجة تحليل Mask R-CNN</h3>
-                            <span style="background:${diag.color}; color:#000; padding:4px 10px; border-radius:6px; font-size:10px; font-weight:bold;">CONF: ${diag.conf}%</span>
-                        </div>
-                        <p style="font-size:14px; color:#eee;"><strong>الموقع:</strong> ${diag.location}</p>
-                        <p style="font-size:13px; color:#ccc;"><strong>التشخيص:</strong> ${diag.problem}</p>
-                        <div style="background:rgba(0,0,0,0.5); padding:15px; border-radius:12px; text-align:center; margin:15px 0; border: 1px solid rgba(255,255,255,0.1);">
-                            <small style="color:${diag.color};">التكلفة التقديرية</small><br>
-                            <span style="color:#fff; font-size:20px; font-weight:bold;">${diag.costMin.toLocaleString()} - ${diag.costMax.toLocaleString()} ريال</span>
-                        </div>
-                        <button onclick="window.location.href='map.html'" style="width:100%; background:${diag.color}; color:#000; border:none; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer;">
-                            📍 عرض مراكز صيانة ${diag.location}
-                        </button>
-                    </div>`;
-                
-                if(btn) { btn.disabled = false; btn.innerText = "🔍 شخّص المشكلة الآن"; }
-            };
-        };
-        reader.readAsDataURL(file);
-
+        // 4. الحفظ في Supabase
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+            await supabase.from('maintenance_reports').insert({
+                user_id: session.user.id,
+                title: diag.title,
+                description: diag.problem,
+                status: diag.status,
+                cost: finalMax
+            });
+        }
     } catch (error) {
-        console.error("Inference Error:", error);
-        resultDiv.innerHTML = "<p style='color:red;'>❌ حدث خطأ أثناء التحليل التقني.</p>";
+        resultDiv.innerHTML = `<p style="color:#ff4d4d; text-align:center;">❌ فشل الاتصال.</p>`;
+    } finally {
         if(btn) { btn.disabled = false; btn.innerText = "🔍 شخّص المشكلة الآن"; }
     }
 }
