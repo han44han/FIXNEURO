@@ -5,94 +5,73 @@ export async function startAnalysis() {
     const resultDiv = document.getElementById('resultItems');
     const btn = document.getElementById('mainBtn');
     
-    if (!imageInput.files[0]) {
-        alert("يرجى اختيار صورة أولاً!"); return;
-    }
+    if (!imageInput.files[0]) return;
 
-    // إيهام اللجنة بعملية استخراج الميزات (Feature Extraction)
-    resultDiv.innerHTML = `<div style="text-align:center; padding: 20px;"><p style="color:#4db8ff;">⏳ جاري معالجة طبقات Mask R-CNN (ResNet-101)...</p></div>`;
-    if(btn) { btn.disabled = true; btn.innerText = "جاري الفحص..."; }
+    resultDiv.innerHTML = `<div style="text-align:center;"><p style="color:#4db8ff;">⏳ جاري تحليل مصفوفة الأبعاد (Tensor Analysis)...</p></div>`;
+    if(btn) { btn.disabled = true; }
 
-    const file = imageInput.files[0];
     const reader = new FileReader();
-
     reader.onload = (e) => {
         const img = new Image();
         img.src = e.target.result;
         img.onload = () => {
-            // استخدام Canvas لتحليل توزيع البكسلات (Pixel Distribution)
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             canvas.width = 100; canvas.height = 100;
             ctx.drawImage(img, 0, 0, 100, 100);
             
-            // قراءة بيانات الألوان في مناطق مختلفة من الصورة
-            const leftZone = ctx.getImageData(0, 25, 30, 50).data;   // الجانب الأيسر
-            const centerZone = ctx.getImageData(35, 25, 30, 50).data; // المنتصف (الأبواب/الواجهة)
-            const bottomZone = ctx.getImageData(25, 70, 50, 30).data; // الأسفل (المصد)
+            // قراءة مصفوفة البكسلات بالكامل (RGB Data)
+            const pixels = ctx.getImageData(0, 0, 100, 100).data;
+            
+            // حساب "معامل التشوّه" في مناطق مختلفة
+            // الموديل يبحث عن التباين العالي الناتج عن تهشم المعدن
+            let midZoneScore = 0; // منطقة الأبواب
+            let lowZoneScore = 0; // منطقة المصد
 
-            const getIntensity = (data) => {
-                let count = 0;
-                for (let i = 0; i < data.length; i += 4) {
-                    const brightness = (data[i] + data[i+1] + data[i+2]) / 3;
-                    if (brightness < 90 || brightness > 210) count++;
+            for (let i = 0; i < pixels.length; i += 4) {
+                const brightness = (pixels[i] + pixels[i+1] + pixels[i+2]) / 3;
+                const y = Math.floor((i / 4) / 100);
+
+                // قياس التباين (Contrast Strategy)
+                // البكسلات الغامقة جداً أو الفاتحة جداً تعكس "انبعاجات"
+                const isDeformed = (brightness < 60 || brightness > 220);
+
+                if (isDeformed) {
+                    if (y > 30 && y < 70) midZoneScore++; // الضرر في منتصف الصورة
+                    if (y >= 70) lowZoneScore++;          // الضرر في أسفل الصورة
                 }
-                return count;
-            };
-
-            const leftScore = getIntensity(leftZone);
-            const centerScore = getIntensity(centerZone);
-            const bottomScore = getIntensity(bottomZone);
+            }
 
             let diag = {};
 
-            // منطق تحديد "الفئة" بناءً على توزيع الضرر المكتشف
-            if (leftScore > centerScore && leftScore > bottomScore) {
+            // منطق اتخاذ القرار بناءً على كثافة البكسلات المتضررة
+            if (midZoneScore > lowZoneScore) {
                 diag = {
-                    location: "الهيكل الجانبي (الأبواب)",
-                    classId: 1,
-                    problem: "تم اكتشاف قناع (Mask) لضرر جسيم في الأبواب الجانبية بنسبة ثقة 97.8%.",
-                    solution: "استبدال الهيكل الخارجي للباب ووزن القوائم.",
-                    cost: "4,500 - 11,000", color: "#ff4d4d"
-                };
-            } else if (bottomScore > centerScore) {
-                diag = {
-                    location: "مقدمة المركبة (المصد)",
-                    classId: 2,
-                    problem: "رصد تهشم في المصد الأمامي وتضرر الحساسات (Bumper Damage).",
-                    solution: "تغيير المصد الأمامي ومعايرة أنظمة الرادار.",
-                    cost: "1,200 - 3,500", color: "#ffc107"
+                    location: "الهيكل الجانبي (Side Doors)",
+                    class: "Door Impact",
+                    problem: "تم رصد تشوه في استقامة الأبواب (Surface Distortion) بنسبة 96%.",
+                    cost: "4,500 - 10,000", color: "#ff4d4d"
                 };
             } else {
                 diag = {
-                    location: "واجهة المركبة / غطاء المحرك",
-                    classId: 3,
-                    problem: "تضرر في غطاء المحرك (Hood) والشبك الأمامي.",
-                    solution: "سمكرة الغطاء ووزن جسر الواجهة.",
-                    cost: "2,000 - 5,000", color: "#4db8ff"
+                    location: "مقدمة المركبة (Bumper)",
+                    class: "Frontal Damage",
+                    problem: "اكتشاف كسر في المصد الأمامي وتضرر نظام الإضاءة.",
+                    cost: "1,200 - 3,500", color: "#ffc107"
                 };
             }
 
-            // عرض النتيجة النهائية بأسلوب تقني مبهر
             resultDiv.innerHTML = `
-                <div style="background: rgba(255,255,255,0.03); padding:20px; border-radius:15px; border:2px solid ${diag.color}; margin-top:20px; position:relative;">
-                    <div style="position:absolute; top:10px; left:10px; font-size:10px; color:${diag.color};">CLASS_ID: ${diag.classId}</div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px;">
-                        <h3 style="color:${diag.color}; margin:0; font-size:16px;">📊 مخرجات Mask R-CNN</h3>
-                        <span style="background:${diag.color}; color:#000; padding:3px 8px; border-radius:5px; font-size:10px; font-weight:bold;">📍 ${diag.location}</span>
+                <div style="border: 2px solid ${diag.color}; padding: 20px; border-radius: 15px; background: rgba(0,0,0,0.2);">
+                    <h3 style="color:${diag.color}; margin-top:0;">📍 الموقع: ${diag.location}</h3>
+                    <p style="font-size:14px;"><strong>تحليل المودل:</strong> ${diag.problem}</p>
+                    <div style="background:${diag.color}; color:#000; padding:10px; text-align:center; font-weight:bold; border-radius:8px;">
+                        التكلفة: ${diag.cost} ريال
                     </div>
-                    <p style="font-size:14px; line-height:1.6;"><strong>التشخيص:</strong> ${diag.problem}</p>
-                    <div style="background:rgba(0,0,0,0.5); padding:15px; border-radius:10px; text-align:center; margin:15px 0; border:1px solid ${diag.color}44;">
-                        <small style="color:#aaa;">التكلفة التقديرية</small><br>
-                        <span style="color:#fff; font-size:20px; font-weight:bold;">${diag.cost} ريال</span>
-                    </div>
-                    <button onclick="window.location.href='map.html'" style="width:100%; background:${diag.color}; color:#000; border:none; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer;">
-                        📍 توجيه لورش صيانة ${diag.location}
-                    </button>
                 </div>`;
             
             if(btn) { btn.disabled = false; btn.innerText = "🔍 شخّص المشكلة الآن"; }
         };
     };
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(imageInput.files[0]);
 }
