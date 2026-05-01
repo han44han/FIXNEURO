@@ -16,17 +16,22 @@
     h1 { font-size: 28px; margin-bottom: 10px; text-align: center; background: linear-gradient(to right, #fff, #4db8ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     p.subtitle { text-align: center; color: #a0a0a0; margin-bottom: 30px; }
     
+    /* ستايل التبويبات الجديد */
+    .tabs-container { display: flex; background: rgba(0, 0, 0, 0.3); border-radius: 15px; padding: 5px; margin-bottom: 25px; border: 1px solid rgba(77,184,255,0.1); }
+    .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; background: transparent; color: white; cursor: pointer; font-weight: bold; transition: 0.3s; font-size: 16px; }
+    .tab-btn.active { background: linear-gradient(135deg, #1a6fd4, #4db8ff); color: #000; }
+
     .input-group { margin-bottom: 25px; }
     label { display: block; margin-bottom: 10px; color: #4db8ff; font-weight: 500; }
     
-    /* ستايل قائمة اختيار السيارة */
-    select { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(77,184,255,0.2); border-radius: 15px; padding: 15px; color: white; font-size: 16px; outline: none; cursor: pointer; margin-bottom: 10px; }
+    select { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(77,184,255,0.2); border-radius: 15px; padding: 15px; color: white; font-size: 16px; outline: none; cursor: pointer; }
     select option { background: #050d1a; color: white; }
 
-    textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid rgba(77,184,255,0.2); border-radius: 15px; padding: 20px; color: white; font-size: 16px; min-height: 120px; outline: none; transition: 0.3s; }
+    textarea, .file-input { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid rgba(77,184,255,0.2); border-radius: 15px; padding: 20px; color: white; font-size: 16px; min-height: 120px; outline: none; transition: 0.3s; }
     textarea:focus { border-color: #4db8ff; box-shadow: 0 0 10px rgba(77,184,255,0.2); }
+    
+    .file-input { min-height: auto; cursor: pointer; }
 
-    /* الزر القديم الملون */
     .btn-check { width: 100%; background: linear-gradient(135deg, #1a6fd4, #4db8ff); color: white; border: none; border-radius: 15px; padding: 18px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
     .btn-check:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(26,111,212,0.4); }
     .btn-check:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -46,8 +51,15 @@
 <div class="container">
   <div class="card">
     <h1>التشخيص الذكي بالذكاء الاصطناعي</h1>
-    <p class="subtitle">شخّص عطل سيارتك بدقة واحصل على التكلفة التقديرية</p>
+    <p class="subtitle">اختر طريقة التشخيص المناسبة لسيارتك</p>
 
+    <!-- أزرار التبديل (نص - صورة) -->
+    <div class="tabs-container">
+      <button class="tab-btn active" id="btnText" onclick="switchMode('text')">نص</button>
+      <button class="tab-btn" id="btnImage" onclick="switchMode('image')">صورة</button>
+    </div>
+
+    <!-- فئة السيارة -->
     <div class="input-group">
       <label>فئة السيارة:</label>
       <select id="carCategory">
@@ -57,9 +69,16 @@
       </select>
     </div>
 
-    <div class="input-group">
+    <!-- مدخل النص -->
+    <div class="input-group" id="textInputGroup">
       <label>وصف المشكلة بالتفصيل:</label>
       <textarea id="accidentDescription" placeholder="مثال: السيارة ترتفع حرارتها عند الوقوف..."></textarea>
+    </div>
+
+    <!-- مدخل الصورة -->
+    <div class="input-group" id="imageInputGroup" style="display: none;">
+      <label>ارفع صورة العطل أو الجزء المتضرر:</label>
+      <input type="file" id="carImage" class="file-input" accept="image/*">
     </div>
 
     <button id="mainBtn" class="btn-check" onclick="startDiagnosis()">🔍 شخّص المشكلة الآن</button>
@@ -68,9 +87,30 @@
   </div>
 </div>
 
+<script>
+    // دالة التبديل بين النص والصورة بنفس التنسيق
+    function switchMode(mode) {
+        const textGroup = document.getElementById('textInputGroup');
+        const imageGroup = document.getElementById('imageInputGroup');
+        const btnText = document.getElementById('btnText');
+        const btnImage = document.getElementById('btnImage');
+
+        if (mode === 'text') {
+            textGroup.style.display = 'block';
+            imageGroup.style.display = 'none';
+            btnText.classList.add('active');
+            btnImage.classList.remove('active');
+        } else {
+            textGroup.style.display = 'none';
+            imageGroup.style.display = 'block';
+            btnImage.classList.add('active');
+            btnText.classList.remove('active');
+        }
+    }
+</script>
+
 <script type="module">
     import { startAnalysis } from './ai.js';
-    // ربط الدالة بالنافذة لتكون قابلة للاستدعاء من onclick
     window.startDiagnosis = startAnalysis;
 </script>
 
