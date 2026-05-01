@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FixNeuro - تشخيص السيارة</title>
+  <title>FixNeuro - التشخيص الذكي</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', Arial, sans-serif; background: #050d1a; color: white; min-height: 100vh; display: flex; flex-direction: column; }
@@ -20,17 +20,19 @@
     .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; background: transparent; color: white; cursor: pointer; font-weight: bold; transition: 0.3s; font-size: 16px; }
     .tab-btn.active { background: linear-gradient(135deg, #1a6fd4, #4db8ff); color: #000; }
 
-    .input-group { margin-bottom: 25px; transition: 0.3s ease-in-out; }
+    .input-group { margin-bottom: 25px; }
     label { display: block; margin-bottom: 10px; color: #4db8ff; font-weight: 500; }
     
-    select, textarea, .file-input { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid rgba(77,184,255,0.2); border-radius: 15px; padding: 15px; color: white; font-size: 16px; outline: none; }
-    textarea { min-height: 120px; }
-    .file-input { padding: 20px; border-style: dashed; cursor: pointer; }
+    select, textarea, input[type="file"] { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid rgba(77,184,255,0.2); border-radius: 15px; padding: 15px; color: white; font-size: 16px; outline: none; }
+    textarea { min-height: 120px; resize: vertical; }
 
-    .btn-check { width: 100%; background: linear-gradient(135deg, #1a6fd4, #4db8ff); color: white; border: none; border-radius: 15px; padding: 18px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
-    .btn-check:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(26,111,212,0.4); }
+    .btn-action { width: 100%; border: none; border-radius: 15px; padding: 18px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; color: white; }
+    .btn-text { background: linear-gradient(135deg, #1a6fd4, #4db8ff); }
+    .btn-image { background: linear-gradient(135deg, #ffc107, #ff9800); color: #000; }
+    .btn-action:hover { transform: translateY(-2px); filter: brightness(1.1); }
 
-    #resultItems { margin-top: 30px; }
+    #result-box { margin-top: 30px; padding: 20px; border: 1px solid #ffc107; border-radius: 20px; background: rgba(255,193,7,0.05); display: none; }
+    #res-img { width: 100%; border-radius: 15px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.1); }
   </style>
 </head>
 <body>
@@ -45,85 +47,81 @@
 <div class="container">
   <div class="card">
     <h1>التشخيص الذكي</h1>
-    <p class="subtitle">اختر "نص" للكتابة أو "صورة" للرفع</p>
+    <p class="subtitle">اختر الطريقة المناسبة لفحص مركبتك</p>
 
     <div class="tabs-container">
-      <button class="tab-btn active" id="btnText" onclick="switchMode('text')">نص</button>
-      <button class="tab-btn" id="btnImage" onclick="switchMode('image')">صورة</button>
+      <button class="tab-btn active" id="btnText" onclick="switchMode('text')">تشخيص نصي</button>
+      <button class="tab-btn" id="btnImage" onclick="switchMode('image')">تشخيص بالصورة</button>
     </div>
 
-    <!-- قسم فئة السيارة (سيختفي في حال اختيار صورة) -->
-    <div class="input-group" id="categoryGroup">
-      <label>فئة السيارة:</label>
-      <select id="carCategory">
-        <option value="1">اقتصادية</option>
-        <option value="1.6">متوسطة / عائلية</option>
-        <option value="2.8">فاخرة</option>
-      </select>
+    <!-- مسار النص -->
+    <div id="textSection">
+      <div class="input-group">
+        <label>فئة السيارة:</label>
+        <select id="carCategory">
+          <option value="1">اقتصادية</option>
+          <option value="1.6">متوسطة / عائلية</option>
+          <option value="2.8">فاخرة</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>وصف المشكلة:</label>
+        <textarea id="text-input" placeholder="مثال: أسمع صوت طقطقة في المساعدات عند المنعطفات..."></textarea>
+      </div>
+      <button class="btn-action btn-text" onclick="diagnoseText()">شخّص النص الآن ✍️</button>
     </div>
 
-    <!-- مدخل النص -->
-    <div class="input-group" id="textInputGroup">
-      <label>وصف المشكلة:</label>
-      <textarea id="accidentDescription" placeholder="مثال: صوت طقطقة في المكينة..."></textarea>
-    </div>
-<!-- قسم التشخيص الذكي -->
-<div class="diagnosis-container" style="direction: rtl; text-align: right; background: #0b111a; padding: 20px; border-radius: 15px;">
-    
-    <!-- المسار الأول: التشخيص النصي -->
-    <div id="text-path" style="margin-bottom: 30px; border-bottom: 1px solid #222; padding-bottom: 20px;">
-        <h3 style="color: #fff;">وصف المشكلة نصياً</h3>
-        <textarea id="text-input" placeholder="مثال: أسمع صوت طقطقة في المساعدات..." 
-                  style="width: 100%; height: 100px; background: #1a1a1a; color: white; border-radius: 10px; padding: 10px; border: 1px solid #333;"></textarea>
-        <button onclick="diagnoseText()" style="margin-top: 10px; background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">
-            شخّص النص الآن ✍️
-        </button>
+    <!-- مسار الصورة -->
+    <div id="imageSection" style="display: none;">
+      <div class="input-group">
+        <label>ارفع صورة واضحة لمكان الضرر:</label>
+        <input type="file" id="image-input" accept="image/*">
+      </div>
+      <button class="btn-action btn-image" onclick="diagnoseImage()">شخّص الصورة الآن 📷</button>
     </div>
 
-    <!-- المسار الثاني: التشخيص بالصور -->
-    <div id="image-path">
-        <h3 style="color: #fff;">ارفع صورة العطل</h3>
-        <input type="file" id="image-input" accept="image/*" style="color: #ccc; margin-bottom: 10px;">
-        <button onclick="diagnoseImage()" style="display: block; background: #ffc107; color: #000; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;">
-            شخّص الصورة الآن 📷
-        </button>
-    </div>
-
-    <!-- قسم عرض النتائج (يظهر عند الاستجابة) -->
-    <div id="result-box" style="display:none; margin-top: 25px; padding: 15px; border: 1px solid #ffc107; border-radius: 10px;">
-        <img id="res-img" src="" style="display:none; width:100%; border-radius: 10px; margin-bottom: 15px;">
-        <div id="res-details" style="color: white;">
-            <p><strong>النتيجة:</strong> <span id="res-text">--</span></p>
+    <!-- منطقة عرض النتائج الموحدة -->
+    <div id="result-box">
+        <h3 style="color: #ffc107; margin-bottom: 15px; text-align: center;">🔍 نتيجة التحليل</h3>
+        <img id="res-img" src="" style="display:none;">
+        <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px;">
+            <p><strong>التشخيص المبدئي:</strong> <span id="res-text" style="color: #ccc;">--</span></p>
         </div>
     </div>
+  </div>
 </div>
+
 <script>
+    // دالة التبديل بين الأقسام
     function switchMode(mode) {
-        const textGroup = document.getElementById('textInputGroup');
-        const imageGroup = document.getElementById('imageInputGroup');
-        const categoryGroup = document.getElementById('categoryGroup'); // قسم الفئة
+        const textSection = document.getElementById('textSection');
+        const imageSection = document.getElementById('imageSection');
         const btnText = document.getElementById('btnText');
         const btnImage = document.getElementById('btnImage');
+        const resultBox = document.getElementById('result-box');
+
+        // إخفاء النتيجة عند التبديل
+        resultBox.style.display = 'none';
 
         if (mode === 'text') {
-            textGroup.style.display = 'block';
-            categoryGroup.style.display = 'block'; // أظهر الفئة في النص
-            imageGroup.style.display = 'none';
+            textSection.style.display = 'block';
+            imageSection.style.display = 'none';
             btnText.classList.add('active');
             btnImage.classList.remove('active');
         } else {
-            textGroup.style.display = 'none';
-            categoryGroup.style.display = 'none'; // أخفِ الفئة في الصورة
-            imageGroup.style.display = 'block';
+            textSection.style.display = 'none';
+            imageSection.style.display = 'block';
             btnImage.classList.add('active');
             btnText.classList.remove('active');
         }
     }
 </script>
 
+<!-- ربط ملفات الجافاسكريبت الخارجية -->
 <script type="module">
-    import { startAnalysis } from './ai.js';
-    window.startDiagnosis = startAnalysis;
+    import { diagnoseText, diagnoseImage } from './ai.js';
+    window.diagnoseText = diagnoseText;
+    window.diagnoseImage = diagnoseImage;
 </script>
 
 </body>
