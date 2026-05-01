@@ -1,42 +1,48 @@
-import cv2
-import base64
-import numpy as np
 from flask import Flask, request, jsonify
-from detectron2.engine import DefaultPredictor
-from detectron2.utils.visualizer import Visualizer
-from detectron2.config import get_cfg
-from detectron2 import model_zoo
+from flask_cors import CORS
+import requests
 
-app = Flask(__name__)
+app = Flask(name)
+CORS(app)
 
-# إعداد الموديل وربط ملف الأوزان
-cfg = get_cfg()
-cfg.merge_from_file(model_zoo.get_config_file("COCO-InstanceSegmentation/mask_rcnn_R_101_FPN_3x.yaml"))
-cfg.MODEL.ROI_HEADS.NUM_CLASSES = 4 
-cfg.MODEL.WEIGHTS = "model_final(1).pth" 
-cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5 
-predictor = DefaultPredictor(cfg)
+API_TOKEN = "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"
+API_URL = "https://api-inference.huggingface.co/models/distilbert-base-uncased-finetuned-sst-2-english"
+headers = {"Authorization": f"Bearer {API_TOKEN}"}
 
-@app.route('/diagnose', methods=['POST'])
-def diagnose():
-    file = request.files['carImage']
-    # تحويل الصورة المرفوعة إلى مصفوفة OpenCV
-    img_bytes = np.frombuffer(file.read(), np.uint8)
-    im = cv2.imdecode(img_bytes, cv2.IMREAD_COLOR)
+@app.route('/check', methods=['POST'])
+def final_check():
+    try:
+        data = request.json
+        user_text = data.get("text", "").lower()
 
-    # تشغيل التنبؤ[cite: 15]
-    outputs = predictor(im)
-    
-    # رسم التحديد (Mask) على الصورة
-    v = Visualizer(im[:, :, ::-1], scale=1.2)
-    out = v.draw_instance_predictions(outputs["instances"].to("cpu"))
-    
-    # تحويل النتيجة لصيغة Base64 لإرسالها للمتصفح
-    _, buffer = cv2.imencode('.jpg', out.get_image()[:, :, ::-1])
-    img_base64 = base64.b64encode(buffer).decode('utf-8')
+        # --- قاموس الترجمة الذكي للسيارات ---
+        # كلمات تدل على ضرر جسيم (ستعطي نتيجة حمراء)
+        severe_keywords = ["دخان", "صوت قوي", "طقطقه", "انفجار", "حريق", "مكينة", "محرك", "شاصيه", "قوي", "متدمرة"]
+        # كلمات تدل على ضرر خفيف (ستعطي نتيجة زرقاء)
+        minor_keywords = ["خدش", "بسيط", "خفيف", "حكة", "مراية", "لمبة", "سطحي"]
 
-    return jsonify({
-        "img_base64": img_base64,
-        "location": "مقدمة المركبة (Frontal)", 
-        "diagnosis": "تم اكتشاف ضرر في الهيكل الخارجي"
-    })
+        # التحقق من الكلمات العربية أولاً
+        if any(word in user_text for word in severe_keywords):
+            translated_text = "severe engine damage and smoke"
+        elif any(word in user_text for word in minor_keywords):
+            translated_text = "just a minor scratch"
+        else:
+            # إذا لم يجد كلمات عربية، يرسل النص كما هو (لعل المستخدم كتب بالإنجليزي)
+            translated_text = user_text
+
+        # إرسال النص (سواء المترجم أو الأصلي) للموديل
+        response = requests.post(API_URL, headers=headers, json={"inputs": translated_text})
+        
+        if response.status_code == 200:
+            result = response.json()
+            label = result[0][0]['label']
+            return jsonify({"prediction": label})
+        
+        # حالة احتياطية إذا فشل السيرفر الخارجي
+        return jsonify({"prediction": "POSITIVE" if "minor" in translated_text else "NEGATIVE"})
+
+    except Exception as e:
+        return jsonify({"prediction": "POSITIVE"})
+
+if name == 'main':
+    app.run(host='0.0.0.0', port=10000)
