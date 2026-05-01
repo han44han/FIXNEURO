@@ -1,25 +1,29 @@
 import { supabase } from './database.js';
 
-const API_URL = "https://fixneuro.onrender.com/check";
+// الروابط البرمجية (تأكد من صحتها في السيرفر لديك)
+const TEXT_API_URL = "https://fixneuro.onrender.com/check"; 
+const IMAGE_API_URL = "https://fixneuro.onrender.com/diagnose-image"; 
 
-export async function startAnalysis() {
-    const textInput = document.getElementById('accidentDescription');
-    const resultDiv = document.getElementById('resultItems');
-    const btn = document.getElementById('mainBtn');
+// --- 1. دالة التشخيص النصي ---
+export async function diagnoseText() {
+    const textInput = document.getElementById('text-input');
     const carCategory = document.getElementById('carCategory');
+    const resultBox = document.getElementById('result-box');
+    const resText = document.getElementById('res-text');
+    const resImg = document.getElementById('res-img');
 
     if (!textInput || !textInput.value.trim()) {
         alert("يرجى كتابة وصف للعطل أولاً!");
         return;
     }
 
-    // 1. تصفير النتيجة القديمة وتعطيل الزر
-    resultDiv.innerHTML = ""; 
-    resultDiv.innerHTML = `<div style="text-align:center; padding: 20px;"><p style="color:#4db8ff;">⏳ جاري التحليل المختصر...</p></div>`;
-    if(btn) { btn.disabled = true; btn.innerText = "جاري الفحص..."; }
+    // تجهيز الواجهة للتحميل
+    resText.innerText = "⏳ جاري تحليل النص...";
+    resultBox.style.display = 'block';
+    resImg.style.display = 'none';
 
     try {
-        const response = await fetch(API_URL, {
+        const response = await fetch(TEXT_API_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ text: textInput.value })
@@ -30,82 +34,103 @@ export async function startAnalysis() {
         const userText = textInput.value.toLowerCase();
         const multiplier = parseFloat(carCategory.value) || 1;
 
-        // 2. محرك التشخيص المختصر
-        let diag = {
-            title: "فحص تقني",
-            problem: "خلل يحتاج فحص كمبيوتر.",
-            solution: "توجه لأقرب مركز صيانة.",
-            costMin: 150, costMax: 400,
-            color: aiStatus === "NEGATIVE" ? "#ff4d4d" : "#4db8ff",
-            status: aiStatus === "NEGATIVE" ? "pending" : "completed"
-        };
+        // محرك تحليل الأعطال (القواعد المنطقية)
+        let diag = calculateDiagnosis(userText, aiStatus, multiplier);
 
-        if (userText.includes("حرارة") || userText.includes("ترتفع")) {
-            diag = {
-                title: "منظومة التبريد",
-                problem: "احتمال تهريب ماء أو عطل مراوح.",
-                solution: "افحص الرديتر فوراً وتجنب القيادة.",
-                costMin: 400, costMax: 2000,
-                color: "#ff4d4d", status: "pending"
-            };
-        } else if (userText.includes("طقطقه") || userText.includes("صوت") || userText.includes("مكينة")) {
-            diag = {
-                title: "ميكانيكا المحرك",
-                problem: "خلل داخلي أو نقص في ضغط الزيت.",
-                solution: "افحص مستوى الزيت وطرمبة الزيت.",
-                costMin: 1500, costMax: 7000,
-                color: "#ff4d4d", status: "pending"
-            };
-        } else if (userText.includes("قير") || userText.includes("نتعه")) {
-            diag = {
-                title: "ناقل الحركة",
-                problem: "اتساخ زيت القير أو عطل حساسات.",
-                solution: "افحص زيت القير والفلتر بالكمبيوتر.",
-                costMin: 600, costMax: 4000,
-                color: "#ff4d4d", status: "pending"
-            };
-        } else if (userText.includes("مكيف") || userText.includes("حر")) {
-            diag = {
-                title: "نظام التكييف",
-                problem: "نقص فريون أو اتساخ الفلتر.",
-                solution: "فحص التهريب وتنظيف الفلتر.",
-                costMin: 200, costMax: 1500,
-                color: "#4db8ff", status: "completed"
-            };
-        }
+        // عرض النتيجة
+        resText.innerHTML = `
+            <strong style="color:${diag.color}">[${diag.title}]</strong><br>
+            <b>المشكلة:</b> ${diag.problem}<br>
+            <b>الحل:</b> ${diag.solution}<br>
+            <div style="margin-top:10px; background:rgba(255,255,255,0.1); padding:5px; border-radius:5px;">
+                التكلفة المتوقعة: ${diag.finalMin} - ${diag.finalMax} ريال
+            </div>
+        `;
 
-        // حساب السعر النهائي
-        const finalMin = Math.round(diag.costMin * multiplier);
-        const finalMax = Math.round(diag.costMax * multiplier);
+        // حفظ التقرير في Supabase
+        saveReportToSupabase(diag);
 
-        // 3. عرض النتيجة النهائية (مختصرة وأنيقة)
-        resultDiv.innerHTML = `
-            <div style="background: rgba(255,255,255,0.03); padding:20px; border-radius:15px; border:2px solid ${diag.color}; margin-top:20px;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                    <h3 style="color:${diag.color}; margin:0;">📋 ${diag.title}</h3>
-                    <span style="font-size:12px; color:${diag.color}; border:1px solid; padding:2px 8px; border-radius:5px;">AI: ${aiStatus}</span>
-                </div>
-                <p style="font-size:14px; margin-bottom:5px;"><strong>المشكلة:</strong> ${diag.problem}</p>
-                <p style="font-size:14px; margin-bottom:15px;"><strong>الحل:</strong> ${diag.solution}</p>
-                <div style="background:rgba(0,0,0,0.3); padding:10px; border-radius:8px; text-align:center;">
-                    <span style="color:#fff; font-weight:bold;">التكلفة: ${finalMin.toLocaleString()} - ${finalMax.toLocaleString()} ريال</span>
-                </div>
-            </div>`;
-
-        // 4. الحفظ في Supabase
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-            await supabase.from('maintenance_reports').insert({
-                user_id: session.user.id,
-                title: diag.title,
-                description: diag.problem,
-                status: diag.status,
-                cost: finalMax
-            });
-        }
     } catch (error) {
-        resultDiv.innerHTML = `<p style="color:#ff4d4d; text-align:center;">❌ فشل الاتصال.</p>`;
-    } finally {
-        if(btn) { btn.disabled = false; btn.innerText = "🔍 شخّص المشكلة الآن"; }
+        resText.innerText = "❌ فشل الاتصال بسيرفر التحليل النصي.";
+    }
+}
+
+// --- 2. دالة التشخيص بالصور (Mask R-CNN) ---
+export async function diagnoseImage() {
+    const imageInput = document.getElementById('image-input');
+    const resultBox = document.getElementById('result-box');
+    const resText = document.getElementById('res-text');
+    const resImg = document.getElementById('res-img');
+
+    if (!imageInput.files[0]) {
+        alert("يرجى اختيار صورة العطل أولاً!");
+        return;
+    }
+
+    resText.innerText = "⏳ جاري فحص الصورة بالذكاء الاصطناعي...";
+    resultBox.style.display = 'block';
+    resImg.style.display = 'none';
+
+    const formData = new FormData();
+    formData.append('carImage', imageInput.files[0]);
+
+    try {
+        const response = await fetch(IMAGE_API_URL, {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await response.json();
+
+        // عرض الصورة المعالجة (التي تحتوي على الـ Mask)
+        if (data.img_base64) {
+            resImg.src = "data:image/jpeg;base64," + data.img_base64;
+            resImg.style.display = 'block';
+        }
+
+        resText.innerHTML = `
+            <strong style="color:#ffc107">[تحليل بصري]</strong><br>
+            <b>التشخيص:</b> ${data.diagnosis || "تم اكتشاف ضرر في الهيكل الخارجي"}<br>
+            <b>الإجراء:</b> يرجى مراجعة فني سمكرة لتقدير دقيق.
+        `;
+
+    } catch (error) {
+        resText.innerText = "❌ فشل تحليل الصورة. تأكد من تشغيل سيرفر Python.";
+    }
+}
+
+// --- دالة مساعدة لحساب التكاليف والنتائج ---
+function calculateDiagnosis(userText, aiStatus, multiplier) {
+    let diag = {
+        title: "فحص عام",
+        problem: "خلل غير محدد بدقة.",
+        solution: "افحص السيارة بالكمبيوتر.",
+        costMin: 200, costMax: 500,
+        color: "#4db8ff"
+    };
+
+    if (userText.includes("حرارة")) {
+        diag = { title: "منظومة التبريد", problem: "تهريب أو عطل مروحة", solution: "افحص الرديتر", costMin: 400, costMax: 1500, color: "#ff4d4d" };
+    } else if (userText.includes("صوت") || userText.includes("طقطقه")) {
+        diag = { title: "المحرك/العضلات", problem: "صوت ميكانيكي غير طبيعي", solution: "فحص يدوي للمكينة أو المساعدات", costMin: 1000, costMax: 5000, color: "#ff4d4d" };
+    }
+
+    return {
+        ...diag,
+        finalMin: Math.round(diag.costMin * multiplier),
+        finalMax: Math.round(diag.costMax * multiplier)
+    };
+}
+
+// --- دالة حفظ البيانات في Supabase ---
+async function saveReportToSupabase(diag) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+        await supabase.from('maintenance_reports').insert({
+            user_id: session.user.id,
+            title: diag.title,
+            description: diag.problem,
+            cost: diag.finalMax
+        });
     }
 }
