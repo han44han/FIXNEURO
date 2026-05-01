@@ -1,8 +1,5 @@
 flask
 flask-cors
-torch
-torchvision
-opencv-python
+requests
 numpy
-# لتثبيت Detectron2 مباشرة من GitHub عند الرفع
-git+https://github.com/facebookresearch/detectron2.git
+opencv-python-headless
