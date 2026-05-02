@@ -14,7 +14,7 @@ export async function diagnoseText() {
         return;
     }
 
-    // 1. تنظيف الواجهة تماماً قبل البدء
+    // تنظيف الواجهة وإخفاء الصورة فوراً
     if (resImg) {
         resImg.style.display = 'none';
         resImg.src = '';
@@ -31,16 +31,15 @@ export async function diagnoseText() {
         const data = await response.json();
         const prediction = data.prediction || data.class || "غير محدد";
 
-        // 2. عرض قالب النص فقط
         resText.innerHTML = `
-            <div style="padding:15px; border-right:4px solid #4db8ff; background: rgba(77,184,255,0.05); text-align:right;">
-                <h3 style="color:#4db8ff; margin-bottom:10px;">📋 تقرير التشخيص النصي:</h3>
-                <p><strong>الوصف:</strong> ${textInput.value}</p>
-                <p><strong>النتيجة:</strong> ${prediction === 'NEGATIVE' ? 'يُنصح بفحص المحرك فوراً' : 'حالة طبيعية تحتاج مراقبة'}</p>
+            <div style="padding:15px; border-right:4px solid #4db8ff; background: rgba(77,184,255,0.05);">
+                <h3 style="color:#4db8ff; margin-bottom:10px;">📋 نتيجة التشخيص النصي:</h3>
+                <p><strong>المشكلة:</strong> ${textInput.value}</p>
+                <p><strong>التحليل:</strong> ${prediction === 'NEGATIVE' ? 'عطل يحتاج فحص فني' : 'حالة مستقرة'}</p>
             </div>
         `;
     } catch (error) {
-        resText.innerText = "❌ فشل الاتصال بمحرك النصوص.";
+        resText.innerText = "❌ خطأ في الاتصال بالسيرفر.";
     }
 }
 
@@ -56,7 +55,7 @@ export async function diagnoseImage() {
         return;
     }
 
-    // 1. تنظيف الواجهة تماماً قبل البدء
+    // تنظيف الواجهة
     resText.innerHTML = "⏳ جاري فحص الصورة...";
     if (resImg) resImg.style.display = 'none';
     resultBox.style.display = 'block';
@@ -69,13 +68,11 @@ export async function diagnoseImage() {
             method: "POST",
             body: formData
         });
-
         const data = await response.json();
-        let prediction = data.prediction || data.class || "تم رصد تضرر في الهيكل الخارجي";
+        const prediction = data.prediction || data.class || "تم كشف ضرر خارجي";
 
-        // 2. عرض قالب الصورة فقط
         resText.innerHTML = `
-            <div style="border: 1px solid #4db8ff; padding: 15px; border-radius: 10px; background: rgba(77,184,255,0.05); text-align:right;">
+            <div style="border: 1px solid #4db8ff; padding: 15px; border-radius: 10px; background: rgba(77,184,255,0.05);">
                 <h3 style="color:#4db8ff; margin-bottom:10px;">📍 نتيجة الفحص البصري:</h3>
                 <p>${prediction}</p>
             </div>
@@ -88,9 +85,8 @@ export async function diagnoseImage() {
             resImg.style.marginTop = '15px';
         };
         reader.readAsDataURL(imageInput.files[0]);
-        
     } catch (error) {
-        resText.innerText = "❌ فشل الاتصال بمحرك الصور.";
+        resText.innerText = "❌ خطأ في تحليل الصورة.";
     }
 }
-}
+
