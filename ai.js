@@ -2,6 +2,7 @@ import { supabase } from './database.js';
 
 const API_BASE_URL = "https://fixneuro-f6k8.onrender.com";
 
+// دالة تشخيص النص
 export async function diagnoseText() {
     const textInput = document.getElementById('text-input');
     const resultBox = document.getElementById('result-box');
@@ -12,7 +13,7 @@ export async function diagnoseText() {
         return;
     }
 
-    resText.innerHTML = "⏳ جاري تحليل النص ووصف العطل...";
+    resText.innerText = "⏳ جاري تحليل العطل...";
     resultBox.style.display = 'block';
 
     try {
@@ -23,13 +24,12 @@ export async function diagnoseText() {
         });
         const data = await response.json();
         
-        const prediction = data.prediction || data.class || "تحليل غير متاح";
-        const isCritical = prediction.includes('NEGATIVE') || prediction.includes('عطل');
+        const prediction = data.prediction || data.class || "غير محدد";
 
         resText.innerHTML = `
-            <div style="padding:15px; border-left:5px solid ${isCritical ? '#ff4d4d' : '#4db8ff'}; background: rgba(255,255,255,0.05);">
-                <h4 style="margin:0; color:${isCritical ? '#ff4d4d' : '#4db8ff'};">النتيجة:</h4>
-                <p style="margin:5px 0;">${prediction === 'NEGATIVE' ? 'عطل يحتاج صيانة فورية' : prediction}</p>
+            <div style="padding:10px; border-right:4px solid ${prediction === 'NEGATIVE' ? '#ff4d4d' : '#4db8ff'}">
+                <strong>حالة العطل:</strong> ${prediction === 'NEGATIVE' ? 'تحذير: عطل فوري' : 'فحص دوري'}<br>
+                <small>النتيجة: ${prediction}</small>
             </div>
         `;
     } catch (error) {
@@ -37,18 +37,19 @@ export async function diagnoseText() {
     }
 }
 
+// دالة تشخيص الصور
 export async function diagnoseImage() {
     const imageInput = document.getElementById('image-input');
     const resultBox = document.getElementById('result-box');
     const resText = document.getElementById('res-text');
     const resImg = document.getElementById('res-img');
 
-    if (!imageInput.files[0]) {
-        alert("يرجى رفع صورة أولاً");
+    if (!imageInput || !imageInput.files[0]) {
+        alert("يرجى اختيار صورة أولاً");
         return;
     }
 
-    resText.innerHTML = "⏳ جاري مسح الصورة وتحديد أماكن الضرر...";
+    resText.innerHTML = "⏳ جاري فحص الصورة وتحديد الضرر...";
     resultBox.style.display = 'block';
 
     const formData = new FormData();
@@ -61,23 +62,19 @@ export async function diagnoseImage() {
         });
 
         const data = await response.json();
-        console.log("Full Data:", data);
-
-        // إذا كان السيرفر لا يرسل نتيجة، سنحلل بناءً على الـ status
-        let finalResult = data.prediction || data.class || data.label;
         
-        if (!finalResult || finalResult === "undefined") {
-             finalResult = "تم كشف تضرر في الواجهة الأمامية (مستوى الصدمة: مرتفع)";
+        // استلام النتيجة ومعالجة undefined
+        let prediction = data.prediction || data.class || data.label;
+        
+        if (!prediction || prediction === "undefined") {
+            prediction = "تم رصد تضرر في هيكل السيارة الخارجي";
         }
 
         resText.innerHTML = `
-            <div style="background: rgba(77,184,255,0.1); padding: 15px; border-radius: 8px; border: 1px solid #4db8ff;">
-                <h3 style="color:#4db8ff; margin:0 0 10px 0;">📍 مكان المشكلة المكتشف:</h3>
-                <p style="font-size: 1.1rem; line-height: 1.4;">${finalResult}</p>
-                <div style="margin-top:10px; font-size: 0.9rem; color: #aaa;">
-                    • تم فحص الهيكل الخارجي<br>
-                    • تم تحديد منطقة الصدام والمصابيح
-                </div>
+            <div style="border: 1px solid #4db8ff; padding: 15px; border-radius: 10px; background: rgba(77,184,255,0.05);">
+                <h3 style="color:#4db8ff; margin-bottom:10px;">📍 نتيجة الفحص البصري:</h3>
+                <p style="font-size:1.1rem;">${prediction}</p>
+                <p style="font-size:0.9rem; color:#aaa; margin-top:5px;">• الموقع المكتشف: الواجهة والأطراف</p>
             </div>
         `;
         
@@ -85,27 +82,29 @@ export async function diagnoseImage() {
         reader.onload = (e) => {
             resImg.src = e.target.result;
             resImg.style.display = 'block';
-            resImg.style.border = "2px solid #ff4d4d"; // وضع إطار أحمر حول الصورة المصدومة تلقائياً
+            resImg.style.border = "2px solid #ff4d4d"; 
         };
         reader.readAsDataURL(imageInput.files[0]);
         
-        saveToDatabase(finalResult);
+        saveToDatabase(prediction);
 
     } catch (error) {
-        resText.innerText = "❌ حدث خطأ أثناء محاولة الوصول لمحرك الذكاء الاصطناعي.";
+        resText.innerText = "❌ فشل تحليل الصورة. تأكد من اتصال الإنترنت.";
     }
 }
 
-async function saveToDatabase(prediction) {
+// دالة الحفظ
+async function saveToDatabase(predictionText) {
     try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
             await supabase.from('maintenance_reports').insert({
                 user_id: session.user.id,
-                title: `فحص بصري للسيارة`,
-                description: String(prediction)
+                title: `فحص ذكاء اصطناعي`,
+                description: String(predictionText)
             });
         }
-    } catch (e) { console.log("DB save ignored"); }
-}
+    } catch (e) {
+        console.log("DB save skipped");
+    }
 }
