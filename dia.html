@@ -113,21 +113,16 @@
 </script>
 
 <script type="module">
+    // لاحظي إضافة .js في نهاية المسار
     import { diagnoseText, diagnoseImage } from './ai.js';
     
-    // ربط الزر برمجياً لضمان عدم حدوث تعارض
     const mainBtn = document.getElementById('mainBtn');
     if (mainBtn) {
-        mainBtn.addEventListener('click', (e) => {
-            e.preventDefault(); // منع أي سلوك افتراضي قد يعطل الزر
-            
+        mainBtn.addEventListener('click', () => {
             const btnText = document.getElementById('btnText');
-            // التأكد من الوضع المختار (نص أو صورة)
-            if (btnText && btnText.classList.contains('active')) {
-                console.log("Running Text Diagnosis...");
+            if (btnText.classList.contains('active')) {
                 diagnoseText();
             } else {
-                console.log("Running Image Diagnosis...");
                 diagnoseImage();
             }
         });
