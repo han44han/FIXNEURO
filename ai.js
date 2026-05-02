@@ -2,18 +2,20 @@ import { supabase } from './database.js';
 
 const API_BASE_URL = "https://fixneuro-f6k8.onrender.com";
 
-// دالة تشخيص النص
 export async function diagnoseText() {
     const textInput = document.getElementById('text-input');
     const resultBox = document.getElementById('result-box');
     const resText = document.getElementById('res-text');
+    const resImg = document.getElementById('res-img'); // نحتاج الصورة لإخفائها
 
     if (!textInput || !textInput.value.trim()) {
         alert("يرجى وصف مشكلة السيارة أولاً");
         return;
     }
 
-    resText.innerText = "⏳ جاري تحليل العطل...";
+    // إخفاء الصورة القديمة فوراً وتغيير النص لانتظار التحليل
+    if (resImg) resImg.style.display = 'none';
+    resText.innerHTML = "⏳ جاري تحليل وصف المشكلة...";
     resultBox.style.display = 'block';
 
     try {
@@ -26,10 +28,12 @@ export async function diagnoseText() {
         
         const prediction = data.prediction || data.class || "غير محدد";
 
+        // عرض النتيجة الخاصة بالنص فقط وبشكل منسق
         resText.innerHTML = `
-            <div style="padding:10px; border-right:4px solid ${prediction === 'NEGATIVE' ? '#ff4d4d' : '#4db8ff'}">
-                <strong>حالة العطل:</strong> ${prediction === 'NEGATIVE' ? 'تحذير: عطل فوري' : 'فحص دوري'}<br>
-                <small>النتيجة: ${prediction}</small>
+            <div style="padding:15px; border-right:4px solid #4db8ff; background: rgba(77,184,255,0.05);">
+                <h3 style="color:#4db8ff; margin-bottom:10px;">📋 تقرير فحص العطل (نص):</h3>
+                <p><strong>المشكلة المدخلة:</strong> ${textInput.value}</p>
+                <p><strong>تحليل النظام:</strong> ${prediction === 'NEGATIVE' ? 'هذا العطل يتطلب فحصاً فنياً عاجلاً' : 'عطل يحتاج متابعة دورية'}</p>
             </div>
         `;
     } catch (error) {
@@ -37,7 +41,6 @@ export async function diagnoseText() {
     }
 }
 
-// دالة تشخيص الصور
 export async function diagnoseImage() {
     const imageInput = document.getElementById('image-input');
     const resultBox = document.getElementById('result-box');
@@ -49,7 +52,7 @@ export async function diagnoseImage() {
         return;
     }
 
-    resText.innerHTML = "⏳ جاري فحص الصورة وتحديد الضرر...";
+    resText.innerHTML = "⏳ جاري فحص الصورة...";
     resultBox.style.display = 'block';
 
     const formData = new FormData();
@@ -62,49 +65,23 @@ export async function diagnoseImage() {
         });
 
         const data = await response.json();
-        
-        // استلام النتيجة ومعالجة undefined
-        let prediction = data.prediction || data.class || data.label;
-        
-        if (!prediction || prediction === "undefined") {
-            prediction = "تم رصد تضرر في هيكل السيارة الخارجي";
-        }
+        let prediction = data.prediction || data.class || "تم رصد تضرر في الهيكل";
 
         resText.innerHTML = `
             <div style="border: 1px solid #4db8ff; padding: 15px; border-radius: 10px; background: rgba(77,184,255,0.05);">
                 <h3 style="color:#4db8ff; margin-bottom:10px;">📍 نتيجة الفحص البصري:</h3>
-                <p style="font-size:1.1rem;">${prediction}</p>
-                <p style="font-size:0.9rem; color:#aaa; margin-top:5px;">• الموقع المكتشف: الواجهة والأطراف</p>
+                <p>${prediction}</p>
             </div>
         `;
         
         const reader = new FileReader();
         reader.onload = (e) => {
             resImg.src = e.target.result;
-            resImg.style.display = 'block';
-            resImg.style.border = "2px solid #ff4d4d"; 
+            resImg.style.display = 'block'; // إظهار الصورة فقط هنا
         };
         reader.readAsDataURL(imageInput.files[0]);
         
-        saveToDatabase(prediction);
-
     } catch (error) {
-        resText.innerText = "❌ فشل تحليل الصورة. تأكد من اتصال الإنترنت.";
-    }
-}
-
-// دالة الحفظ
-async function saveToDatabase(predictionText) {
-    try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-            await supabase.from('maintenance_reports').insert({
-                user_id: session.user.id,
-                title: `فحص ذكاء اصطناعي`,
-                description: String(predictionText)
-            });
-        }
-    } catch (e) {
-        console.log("DB save skipped");
+        resText.innerText = "❌ فشل تحليل الصورة.";
     }
 }
