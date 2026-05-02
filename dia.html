@@ -113,17 +113,25 @@
 </script>
 
 <script type="module">
-    // تم إضافة .js لضمان عمل الاستيراد في المتصفح
     import { diagnoseText, diagnoseImage } from './ai.js';
     
-    document.getElementById('mainBtn').addEventListener('click', () => {
-        const btnText = document.getElementById('btnText');
-        if (btnText.classList.contains('active')) {
-            diagnoseText();
-        } else {
-            diagnoseImage();
-        }
-    });
+    // ربط الزر برمجياً لضمان عدم حدوث تعارض
+    const mainBtn = document.getElementById('mainBtn');
+    if (mainBtn) {
+        mainBtn.addEventListener('click', (e) => {
+            e.preventDefault(); // منع أي سلوك افتراضي قد يعطل الزر
+            
+            const btnText = document.getElementById('btnText');
+            // التأكد من الوضع المختار (نص أو صورة)
+            if (btnText && btnText.classList.contains('active')) {
+                console.log("Running Text Diagnosis...");
+                diagnoseText();
+            } else {
+                console.log("Running Image Diagnosis...");
+                diagnoseImage();
+            }
+        });
+    }
 </script>
 
 </body>
