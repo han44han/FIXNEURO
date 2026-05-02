@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FixNeuro - تشخيص السيارة</title>
   <style>
+    /* لم يتم تغيير أي شيء في التنسيقات */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', Arial, sans-serif; background: #050d1a; color: white; min-height: 100vh; display: flex; flex-direction: column; }
     nav { display: flex; justify-content: space-between; align-items: center; padding: 18px 30px; background: rgba(5,13,26,0.9); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(77,184,255,0.1); position: sticky; top: 0; z-index: 100; }
@@ -87,16 +88,14 @@
 </div>
 
 <script>
-    // تبديل الواجهة بين النص والصورة
+    // منطق التبديل بين الأوضاع (يبقى كما هو)
     const btnText = document.getElementById('btnText');
     const btnImage = document.getElementById('btnImage');
     const textGroup = document.getElementById('textInputGroup');
     const imageGroup = document.getElementById('imageInputGroup');
     const categoryGroup = document.getElementById('categoryGroup');
-    let currentMode = 'text';
 
     btnText.onclick = () => {
-        currentMode = 'text';
         textGroup.style.display = 'block';
         categoryGroup.style.display = 'block';
         imageGroup.style.display = 'none';
@@ -105,7 +104,6 @@
     };
 
     btnImage.onclick = () => {
-        currentMode = 'image';
         textGroup.style.display = 'none';
         categoryGroup.style.display = 'none';
         imageGroup.style.display = 'block';
@@ -115,9 +113,9 @@
 </script>
 
 <script type="module">
+    // تم إضافة .js لضمان عمل الاستيراد في المتصفح
     import { diagnoseText, diagnoseImage } from './ai.js';
     
-    // ربط الزر بالدالة المناسبة بناءً على الوضع المختار
     document.getElementById('mainBtn').addEventListener('click', () => {
         const btnText = document.getElementById('btnText');
         if (btnText.classList.contains('active')) {
@@ -129,4 +127,5 @@
 </script>
 
 </body>
+</html>
 </html>
