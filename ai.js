@@ -21,15 +21,22 @@ export async function diagnoseText() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ text: textInput.value })
         });
+        
         const data = await response.json();
         
+        // معالجة النتيجة لضمان عدم ظهور undefined
+        const prediction = data.prediction || data.class || data.label || "غير محدد";
+        const isNegative = prediction.toUpperCase() === 'NEGATIVE';
+
         resText.innerHTML = `
-            <div style="padding:10px; border-right:4px solid ${data.prediction === 'NEGATIVE' ? '#ff4d4d' : '#4db8ff'}">
-                <strong>حالة العطل:</strong> ${data.prediction === 'NEGATIVE' ? 'تحذير: عطل فوري' : 'فحص دوري'}<br>
-                <small>النتيجة: ${data.prediction}</small>
+            <div style="padding:15px; border-right:4px solid ${isNegative ? '#ff4d4d' : '#4db8ff'}; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                <strong style="color: ${isNegative ? '#ff4d4d' : '#4db8ff'};">حالة العطل:</strong> 
+                ${isNegative ? 'تحذير: عطل فوري يحتاج تدخل' : 'فحص دوري / حالة مستقرة'}<br>
+                <small style="opacity: 0.8;">النتيجة التقنية: ${prediction}</small>
             </div>
         `;
     } catch (error) {
+        console.error("Error:", error);
         resText.innerText = "❌ تعذر الاتصال بمحرك التحليل.";
     }
 }
@@ -40,7 +47,7 @@ export async function diagnoseImage() {
     const resText = document.getElementById('res-text');
     const resImg = document.getElementById('res-img');
 
-    if (!imageInput.files[0]) {
+    if (!imageInput || !imageInput.files[0]) {
         alert("يرجى اختيار صورة أولاً");
         return;
     }
@@ -58,15 +65,19 @@ export async function diagnoseImage() {
         });
 
         const data = await response.json();
+        
+        // استخراج النتيجة بأكثر من احتمال لتجنب الـ undefined
+        const prediction = data.prediction || data.class || data.label || "لم يتم التعرف على العطل";
 
-        if (data.status === 'success' || data.prediction) {
+        if (data.status === 'success' || data.prediction || data.class) {
             resText.innerHTML = `
-                <div style="border: 1px solid #4db8ff; padding: 15px; border-radius: 10px;">
-                    <h3 style="color:#4db8ff;">📍 نتيجة الفحص:</h3>
-                    <p>${data.prediction}</p>
+                <div style="border: 1px solid #4db8ff; padding: 15px; border-radius: 10px; background: rgba(77,184,255,0.05);">
+                    <h3 style="color:#4db8ff; margin-bottom: 8px;">📍 نتيجة الفحص البصري:</h3>
+                    <p style="font-size: 1.1em;">${prediction}</p>
                 </div>
             `;
             
+            // معاينة الصورة المرفوعة
             const reader = new FileReader();
             reader.onload = (e) => {
                 resImg.src = e.target.result;
@@ -74,26 +85,29 @@ export async function diagnoseImage() {
             };
             reader.readAsDataURL(imageInput.files[0]);
             
-            saveToDatabase(data);
+            // حفظ التقرير في قاعدة البيانات
+            saveToDatabase(prediction);
         } else {
-            resText.innerText = "❌ فشل في تحليل الصورة.";
+            resText.innerText = "❌ فشل السيرفر في تحليل هذه الصورة.";
         }
     } catch (error) {
-        resText.innerText = "❌ خطأ في الاتصال بالسيرفر.";
+        console.error("Error:", error);
+        resText.innerText = "❌ خطأ في الاتصال بالسيرفر، تأكد من تشغيل Render.";
     }
 }
 
-async function saveToDatabase(data) {
+async function saveToDatabase(predictionText) {
     try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
             await supabase.from('maintenance_reports').insert({
                 user_id: session.user.id,
                 title: `فحص ذكاء اصطناعي`,
-                description: data.prediction
+                description: String(predictionText)
             });
+            console.log("Report saved successfully");
         }
     } catch (e) {
-        console.log("Database save skipped");
+        console.warn("Database save skipped or failed:", e);
     }
 }
