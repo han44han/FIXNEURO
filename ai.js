@@ -1,7 +1,7 @@
 import { supabase } from './database.js';
 
 // --- إعدادات الروابط (تأكد من كتابة رابط Render الخاص بك هنا) ---
-const SERVER_URL = "https://fixneuro.onrender.com"; // رابط السيرفر الأساسي
+const SERVER_URL = "https://fixneuro-f6k8.onrender.com"; // رابط السيرفر الأساسي
 
 /**
  * 1. دالة تحليل النص (التشخيص المعتمد على الوصف)
