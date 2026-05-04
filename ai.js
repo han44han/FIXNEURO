@@ -1,7 +1,7 @@
 import { supabase } from './database.js';
 
 // الرابط الخاص بسيرفرك على Render
-const API_BASE_URL = "https://fixneuro.onrender.com";
+const API_BASE_URL = "https://fixneuro-f6k8.onrender.com";
 
 // --- 1. التشخيص النصي (لم يتم تغيير المنطق كما طلبتِ) ---
 export async function startAnalysis() { // تم تغيير الاسم ليتوافق مع استدعاء dia.html
