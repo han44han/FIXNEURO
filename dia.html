@@ -24,18 +24,17 @@
     label { display: block; margin-bottom: 10px; color: #4db8ff; font-weight: 500; }
     
     select, textarea, .file-input { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid rgba(77,184,255,0.2); border-radius: 15px; padding: 15px; color: white; font-size: 16px; outline: none; }
-    textarea { min-height: 120px; border-style: solid; }
+    textarea { min-height: 120px; border-style: solid; resize: none; }
     .file-input { padding: 20px; border-style: dashed; cursor: pointer; }
 
     .btn-check { width: 100%; background: linear-gradient(135deg, #1a6fd4, #4db8ff); color: white; border: none; border-radius: 15px; padding: 18px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
     .btn-check:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(26,111,212,0.4); }
-    .btn-check:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-check:disabled { opacity: 0.5; cursor: wait; }
 
     .result-box { margin-top: 30px; display: none; padding: 20px; border-radius: 15px; background: rgba(13,31,60,0.6); border: 1px solid rgba(77,184,255,0.2); }
     .res-image-display { width: 100%; display: none; border-radius: 12px; margin-top: 15px; border: 1px solid rgba(77,184,255,0.3); }
     
-    /* مكان عرض نتائج النص القادمة من الكود الأول */
-    #resultItems { margin-top: 20px; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
 <body>
@@ -67,7 +66,7 @@
       </select>
     </div>
 
-    <!-- مدخل النص - تم تعديل الـ ID ليتوافق مع الكود الأول -->
+    <!-- مدخل النص -->
     <div class="input-group" id="textInputGroup">
       <label>وصف المشكلة:</label>
       <textarea id="accidentDescription" placeholder="مثال: صوت طقطقة في المكينة..."></textarea>
@@ -79,12 +78,12 @@
       <input type="file" id="image-input" class="file-input" accept="image/*">
     </div>
 
-    <!-- الزر تم إضافة كلاس التنسيق له -->
     <button id="mainBtn" class="btn-check">شخّص المشكلة الآن</button>
 
-    <!-- حاويات النتائج -->
-    <div id="resultItems"></div> <!-- هنا تظهر نتائج النص والتكلفة -->
+    <!-- مكان عرض نتائج النص -->
+    <div id="resultItems"></div>
 
+    <!-- حاوية نتائج الصور -->
     <div id="image-result-box" class="result-box">
         <div id="image-res-content"></div>
         <img id="image-res-display" class="res-image-display" src="" alt="معاينة الصورة">
@@ -121,24 +120,17 @@
 </script>
 
 <script type="module">
-    // استيراد الدوال من ملف ai.js
     import { startAnalysis, diagnoseImage } from './ai.js';
     
     const mainBtn = document.getElementById('mainBtn');
-    if (mainBtn) {
-        mainBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            const isTextMode = document.getElementById('btnText').classList.contains('active');
-            
-            if (isTextMode) {
-                // تشخيص النص (الكود الأول)
-                startAnalysis();
-            } else {
-                // تشخيص الصور (الكود الثاني)
-                diagnoseImage();
-            }
-        });
-    }
+    mainBtn.addEventListener('click', (e) => {
+        const isTextMode = document.getElementById('btnText').classList.contains('active');
+        if (isTextMode) {
+            startAnalysis();
+        } else {
+            diagnoseImage();
+        }
+    });
 </script>
 
 </body>
