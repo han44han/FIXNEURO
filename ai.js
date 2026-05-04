@@ -2,34 +2,24 @@ import { supabase } from './database.js';
 
 const API_BASE_URL = "https://fixneuro-f6k8.onrender.com";
 
-// دالة موحدة لتنظيف صندوق النتائج تماماً قبل أي عملية
-function clearResults() {
-    const resText = document.getElementById('res-text');
-    const resImg = document.getElementById('res-img');
-    const resultBox = document.getElementById('result-box');
-    
-    if (resText) resText.innerHTML = ""; 
-    if (resImg) {
-        resImg.style.display = 'none';
-        resImg.src = "";
-    }
-    if (resultBox) resultBox.style.display = 'none';
-}
-
+// 1. دالة تشخيص النص
 export async function diagnoseText() {
     const textInput = document.getElementById('text-input');
-    const resText = document.getElementById('res-text');
-    const resultBox = document.getElementById('result-box');
+    const textResBox = document.getElementById('text-result-box');
+    const textContent = document.getElementById('text-res-content');
+    const imageResBox = document.getElementById('image-result-box');
 
     if (!textInput || !textInput.value.trim()) {
         alert("يرجى وصف مشكلة السيارة أولاً");
         return;
     }
 
-    clearResults(); // مسح كل شيء قديم (نصوص أو صور)
+    // إخفاء نتائج الصور وتصفيرها
+    if (imageResBox) imageResBox.style.display = 'none';
     
-    resultBox.style.display = 'block';
-    resText.innerHTML = "⏳ جاري تحليل النص...";
+    // إظهار صندوق النصوص
+    textResBox.style.display = 'block';
+    textContent.innerHTML = "⏳ جاري تحليل النص...";
 
     try {
         const response = await fetch(`${API_BASE_URL}/predict`, {
@@ -40,33 +30,38 @@ export async function diagnoseText() {
         const data = await response.json();
         const prediction = data.prediction || data.class || "غير محدد";
 
-        resText.innerHTML = `
-            <div id="text-result-template" style="padding:15px; border-right:4px solid #4db8ff; background: rgba(77,184,255,0.05); text-align:right;">
-                <h3 style="color:#4db8ff; margin:0 0 10px 0;">📋 نتيجة التشخيص النصي:</h3>
-                <p style="margin:5px 0;"><strong>المشكلة المدخلة:</strong> ${textInput.value}</p>
-                <p style="margin:5px 0;"><strong>التحليل الفني:</strong> ${prediction === 'NEGATIVE' ? 'تنبيه: مؤشر عطل فني' : 'الحالة تبدو مستقرة'}</p>
+        textContent.innerHTML = `
+            <div style="padding:10px; border-right:4px solid #4db8ff;">
+                <h3 style="color:#4db8ff; margin-bottom:8px;">📋 نتيجة التشخيص:</h3>
+                <p><strong>المشكلة:</strong> ${textInput.value}</p>
+                <p><strong>التحليل:</strong> ${prediction === 'NEGATIVE' ? 'عطل فني محتمل' : 'الحالة مستقرة'}</p>
             </div>
         `;
     } catch (error) {
-        resText.innerText = "❌ فشل الاتصال بمحرك النصوص.";
+        textContent.innerText = "❌ فشل الاتصال بالسيرفر.";
     }
 }
 
+// 2. دالة تشخيص الصور
 export async function diagnoseImage() {
     const imageInput = document.getElementById('image-input');
-    const resText = document.getElementById('res-text');
-    const resImg = document.getElementById('res-img');
-    const resultBox = document.getElementById('result-box');
+    const imageResBox = document.getElementById('image-result-box');
+    const imageContent = document.getElementById('image-res-content');
+    const imageDisplay = document.getElementById('image-res-display');
+    const textResBox = document.getElementById('text-result-box');
 
     if (!imageInput || !imageInput.files[0]) {
         alert("يرجى رفع صورة أولاً");
         return;
     }
 
-    clearResults(); // مسح كل شيء قديم بما في ذلك نصوص "الحرارة" السابقة
-    
-    resultBox.style.display = 'block';
-    resText.innerHTML = "⏳ جاري فحص الصورة...";
+    // إخفاء نتائج النصوص
+    if (textResBox) textResBox.style.display = 'none';
+
+    // إظهار صندوق الصور
+    imageResBox.style.display = 'block';
+    imageContent.innerHTML = "⏳ جاري فحص الصورة...";
+    imageDisplay.style.display = 'none';
 
     const formData = new FormData();
     formData.append('file', imageInput.files[0]);
@@ -76,31 +71,27 @@ export async function diagnoseImage() {
             method: "POST",
             body: formData
         });
-
         const data = await response.json();
-        const prediction = data.prediction || data.class || "تم رصد تضرر في الهيكل الخارجي";
+        const prediction = data.prediction || data.class || "ضرر خارجي مرصود";
 
-        resText.innerHTML = `
-            <div id="image-result-template" style="border: 1px solid #4db8ff; padding: 15px; border-radius: 10px; background: rgba(77,184,255,0.05); text-align:right;">
-                <h3 style="color:#4db8ff; margin:0 0 10px 0;">📍 نتيجة الفحص البصري:</h3>
-                <p style="margin:0;">${prediction}</p>
+        imageContent.innerHTML = `
+            <div style="padding:10px;">
+                <h3 style="color:#4db8ff; margin-bottom:8px;">📍 نتيجة الفحص البصري:</h3>
+                <p>${prediction}</p>
             </div>
         `;
         
         const reader = new FileReader();
         reader.onload = (e) => {
-            resImg.src = e.target.result;
-            resImg.style.display = 'block';
-            resImg.style.marginTop = '15px';
-            resImg.style.borderRadius = '8px';
+            imageDisplay.src = e.target.result;
+            imageDisplay.style.display = 'block';
         };
         reader.readAsDataURL(imageInput.files[0]);
-        
     } catch (error) {
-        resText.innerText = "❌ فشل الاتصال بمحرك الصور.";
+        imageContent.innerText = "❌ فشل تحليل الصورة.";
     }
 }
 
-// ربط الدوال بالنافذة لضمان عملها
+// السطر السحري الذي يجعل الأزرار "تضغط" وتعمل في الـ HTML
 window.diagnoseText = diagnoseText;
 window.diagnoseImage = diagnoseImage;
