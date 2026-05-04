@@ -67,7 +67,7 @@ export async function startAnalysis() {
     }
 }
 
-// 2. دالة تشخيص الصور (diagnoseImage) المطورة
+// 2. دالة تشخيص الصور (diagnoseImage) فائقة الدقة
 export async function diagnoseImage() {
     const imageInput = document.getElementById('image-input');
     const imageResBox = document.getElementById('image-result-box');
@@ -80,7 +80,7 @@ export async function diagnoseImage() {
     }
 
     imageResBox.style.display = 'block';
-    imageContent.innerHTML = `<div style="text-align:center; padding:10px;">⏳ جاري فحص هيكل السيارة...</div>`;
+    imageContent.innerHTML = `<div style="text-align:center; padding:10px;"><p style="color:#4db8ff;">🔍 جاري فحص تفاصيل الهيكل بدقة...</p></div>`;
     imageDisplay.style.display = 'none';
 
     const formData = new FormData();
@@ -93,23 +93,32 @@ export async function diagnoseImage() {
         });
         const data = await response.json();
         
-        let prediction = data.prediction || data.class || "";
+        // تحويل النتيجة لنص صغير للبحث فيه
+        let prediction = (data.prediction || data.class || "").toLowerCase();
         let finalMessage = "";
-        let statusColor = "#4db8ff"; 
+        let statusColor = "#2ecc71"; // أخضر (سليم) كحالة افتراضية
 
-        // منطق التمييز بين السليم والمتضرر
-        if (prediction.toLowerCase().includes("no damage") || prediction.includes("سليم") || prediction === "") {
-            finalMessage = "✅ لم يتم رصد أضرار واضحة. الهيكل الخارجي يبدو سليماً.";
-            statusColor = "#2ecc71"; 
+        // قائمة الكلمات التي تؤكد وجود ضرر حقيقي
+        const realDamageMarkers = ["damage", "dent", "scratch", "broken", "crash", "smash", "خدش", "صدمة", "ضرر"];
+        
+        // التحقق: هل النتيجة تحتوي على كلمات ضرر حقيقية؟ وهل تخلو من كلمات "السليم"؟
+        const isActuallyDamaged = realDamageMarkers.some(marker => prediction.includes(marker)) && 
+                                  !prediction.includes("no damage") && 
+                                  !prediction.includes("clean");
+
+        if (isActuallyDamaged) {
+            finalMessage = `⚠️ رصد الذكاء الاصطناعي ضرراً محتملاً: ${data.prediction || "تلف في الهيكل"}`;
+            statusColor = "#ff4d4d"; // أحمر (تنبيه)
         } else {
-            finalMessage = `⚠️ نتيجة الفحص: ${prediction}`;
-            statusColor = "#ff4d4d"; 
+            finalMessage = "✅ الفحص البصري الدقيق: السيارة تبدو سليمة ولا توجد أضرار خارجية واضحة.";
+            statusColor = "#2ecc71"; // أخضر (آمن)
         }
 
         imageContent.innerHTML = `
-            <div style="padding:15px; border-radius:12px; background:rgba(255,255,255,0.05); border:2px solid ${statusColor};">
-                <h3 style="color:${statusColor}; margin-bottom:8px;">📍 نتيجة الفحص البصري:</h3>
+            <div style="padding:15px; border-radius:12px; background:rgba(255,255,255,0.05); border:2px solid ${statusColor}; transition: 0.5s;">
+                <h3 style="color:${statusColor}; margin-bottom:8px;">📍 التقرير البصري:</h3>
                 <p style="font-size:16px; font-weight:bold;">${finalMessage}</p>
+                <p style="font-size:12px; color:#aaa; margin-top:8px;">* ملاحظة: النتائج تعتمد على جودة الإضاءة وزاوية التصوير.</p>
             </div>`;
         
         const reader = new FileReader();
@@ -118,11 +127,12 @@ export async function diagnoseImage() {
             imageDisplay.style.display = 'block';
         };
         reader.readAsDataURL(imageInput.files[0]);
+
     } catch (error) {
-        imageContent.innerHTML = `<p style="color:#ff4d4d;">❌ فشل تحليل الصورة.</p>`;
+        imageContent.innerHTML = `<p style="color:#ff4d4d;">❌ حدث خطأ أثناء معالجة الصورة. حاول مرة أخرى.</p>`;
     }
 }
 
-// ربط الدوال بالمتصفح
+// ربط الدوال بالمتصفح لضمان العمل مع التبويبات
 window.startAnalysis = startAnalysis;
 window.diagnoseImage = diagnoseImage;
