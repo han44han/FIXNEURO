@@ -2,7 +2,7 @@ import { supabase } from './database.js';
 
 const API_BASE_URL = "https://fixneuro-f6k8.onrender.com";
 
-// 1. دالة تشخيص النص (تم تغيير اسمها إلى startAnalysis ليتوافق مع الـ HTML)
+// 1. دالة تشخيص النص (startAnalysis)
 export async function startAnalysis() {
     const textInput = document.getElementById('accidentDescription');
     const resultDiv = document.getElementById('resultItems');
@@ -13,7 +13,6 @@ export async function startAnalysis() {
         return;
     }
 
-    // إظهار صندوق النتيجة وتصفيره
     resultDiv.style.display = 'block';
     resultDiv.innerHTML = `<div style="text-align:center; padding: 20px;"><p style="color:#4db8ff;">⏳ جاري تحليل العطل وتقدير التكلفة...</p></div>`;
 
@@ -29,7 +28,6 @@ export async function startAnalysis() {
         const userText = textInput.value.toLowerCase();
         const multiplier = parseFloat(carCategory?.value) || 1;
 
-        // محرك التشخيص الذكي
         let diag = {
             title: "فحص تقني عام",
             problem: "خلل يحتاج فحص كمبيوتر لتحديده بدقة.",
@@ -38,7 +36,6 @@ export async function startAnalysis() {
             color: aiStatus === "NEGATIVE" ? "#ff4d4d" : "#4db8ff"
         };
 
-        // تحليل الكلمات المفتاحية
         if (userText.includes("حرارة") || userText.includes("ترتفع")) {
             diag = { title: "منظومة التبريد", problem: "احتمال تهريب ماء أو عطل في المراوح.", solution: "افحص الرديتر فوراً وتجنب القيادة.", costMin: 400, costMax: 2000, color: "#ff4d4d" };
         } else if (userText.includes("طقطقه") || userText.includes("صوت") || userText.includes("مكينة")) {
@@ -70,7 +67,7 @@ export async function startAnalysis() {
     }
 }
 
-// 2. دالة تشخيص الصور
+// 2. دالة تشخيص الصور (diagnoseImage) المطورة
 export async function diagnoseImage() {
     const imageInput = document.getElementById('image-input');
     const imageResBox = document.getElementById('image-result-box');
@@ -83,7 +80,7 @@ export async function diagnoseImage() {
     }
 
     imageResBox.style.display = 'block';
-    imageContent.innerHTML = `<div style="text-align:center; padding:10px;">⏳ جاري فحص الصورة بالذكاء الاصطناعي...</div>`;
+    imageContent.innerHTML = `<div style="text-align:center; padding:10px;">⏳ جاري فحص هيكل السيارة...</div>`;
     imageDisplay.style.display = 'none';
 
     const formData = new FormData();
@@ -95,12 +92,24 @@ export async function diagnoseImage() {
             body: formData
         });
         const data = await response.json();
-        const prediction = data.prediction || data.class || "تم رصد ضرر خارجي";
+        
+        let prediction = data.prediction || data.class || "";
+        let finalMessage = "";
+        let statusColor = "#4db8ff"; 
+
+        // منطق التمييز بين السليم والمتضرر
+        if (prediction.toLowerCase().includes("no damage") || prediction.includes("سليم") || prediction === "") {
+            finalMessage = "✅ لم يتم رصد أضرار واضحة. الهيكل الخارجي يبدو سليماً.";
+            statusColor = "#2ecc71"; 
+        } else {
+            finalMessage = `⚠️ نتيجة الفحص: ${prediction}`;
+            statusColor = "#ff4d4d"; 
+        }
 
         imageContent.innerHTML = `
-            <div style="padding:15px; border-radius:12px; background:rgba(77,184,255,0.1); border:1px solid #4db8ff;">
-                <h3 style="color:#4db8ff; margin-bottom:8px;">📍 نتيجة الفحص البصري:</h3>
-                <p style="font-size:16px;">${prediction}</p>
+            <div style="padding:15px; border-radius:12px; background:rgba(255,255,255,0.05); border:2px solid ${statusColor};">
+                <h3 style="color:${statusColor}; margin-bottom:8px;">📍 نتيجة الفحص البصري:</h3>
+                <p style="font-size:16px; font-weight:bold;">${finalMessage}</p>
             </div>`;
         
         const reader = new FileReader();
@@ -114,6 +123,6 @@ export async function diagnoseImage() {
     }
 }
 
-// ربط الدوال بالنافذة لضمان استدعائها من الـ HTML
+// ربط الدوال بالمتصفح
 window.startAnalysis = startAnalysis;
 window.diagnoseImage = diagnoseImage;
