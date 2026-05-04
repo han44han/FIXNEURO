@@ -3,5 +3,5 @@ flask-cors
 requests
 torch
 torchvision
-opencv-python
-detectron2
+opencv-python-headless
+numpy
