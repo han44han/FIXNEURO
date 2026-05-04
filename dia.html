@@ -31,7 +31,7 @@
     .btn-check:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(26,111,212,0.4); }
     .btn-check:disabled { opacity: 0.5; cursor: wait; }
 
-    .result-box { margin-top: 30px; display: none; padding: 20px; border-radius: 15px; background: rgba(13,31,60,0.6); border: 1px solid rgba(77,184,255,0.2); }
+    .result-box { margin-top: 30px; display: none; padding: 20px; border-radius: 15px; background: rgba(13,31,60,0.6); border: 1px solid rgba(77,184,255,0.2); animation: fadeIn 0.5s ease-out; }
     .res-image-display { width: 100%; display: none; border-radius: 12px; margin-top: 15px; border: 1px solid rgba(77,184,255,0.3); }
     
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -66,7 +66,7 @@
       </select>
     </div>
 
-    <!-- مدخل النص -->
+    <!-- مدخل النص - تأكدي من ID الوصف -->
     <div class="input-group" id="textInputGroup">
       <label>وصف المشكلة:</label>
       <textarea id="accidentDescription" placeholder="مثال: صوت طقطقة في المكينة..."></textarea>
@@ -80,8 +80,8 @@
 
     <button id="mainBtn" class="btn-check">شخّص المشكلة الآن</button>
 
-    <!-- مكان عرض نتائج النص -->
-    <div id="resultItems"></div>
+    <!-- مكان عرض نتائج النص (تأكدي أن ID هو resultItems) -->
+    <div id="resultItems" class="result-box"></div>
 
     <!-- حاوية نتائج الصور -->
     <div id="image-result-box" class="result-box">
@@ -92,6 +92,7 @@
 </div>
 
 <script>
+    // منطق التبديل بين التبويبات
     const btnText = document.getElementById('btnText');
     const btnImage = document.getElementById('btnImage');
     const textGroup = document.getElementById('textInputGroup');
@@ -106,7 +107,7 @@
         imageGroup.style.display = 'none';
         btnText.classList.add('active');
         btnImage.classList.remove('active');
-        imageResBox.style.display = 'none';
+        imageResBox.style.display = 'none'; // إخفاء صندوق الصور عند العودة للنص
     };
 
     btnImage.onclick = () => {
@@ -115,19 +116,24 @@
         imageGroup.style.display = 'block';
         btnImage.classList.add('active');
         btnText.classList.remove('active');
-        resultItems.innerHTML = ''; 
+        resultItems.style.display = 'none'; // إخفاء نتائج النص عند الانتقال للصور
     };
 </script>
 
 <script type="module">
+    // استيراد الدوال من ملف ai.js
     import { startAnalysis, diagnoseImage } from './ai.js';
     
     const mainBtn = document.getElementById('mainBtn');
-    mainBtn.addEventListener('click', (e) => {
+    
+    mainBtn.addEventListener('click', () => {
         const isTextMode = document.getElementById('btnText').classList.contains('active');
+        
         if (isTextMode) {
+            // تشغيل تشخيص النص من ملف ai.js
             startAnalysis();
         } else {
+            // تشغيل تشخيص الصور من ملف ai.js
             diagnoseImage();
         }
     });
