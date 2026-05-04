@@ -2,23 +2,20 @@ import { supabase } from './database.js';
 
 const API_BASE_URL = "https://fixneuro-f6k8.onrender.com";
 
-// 1. دالة تشخيص النص (تتضمن تحليل التكلفة والشرح المفصل)
-export async function diagnoseText() {
-    const textInput = document.getElementById('text-input');
-    const textResBox = document.getElementById('text-result-box');
-    const textContent = document.getElementById('text-res-content');
-    const imageResBox = document.getElementById('image-result-box');
-    const carCategory = document.getElementById('carCategory'); // للتكلفة
+// 1. دالة تشخيص النص (تم تغيير اسمها إلى startAnalysis ليتوافق مع الـ HTML)
+export async function startAnalysis() {
+    const textInput = document.getElementById('accidentDescription');
+    const resultDiv = document.getElementById('resultItems');
+    const carCategory = document.getElementById('carCategory');
 
     if (!textInput || !textInput.value.trim()) {
         alert("يرجى وصف مشكلة السيارة أولاً");
         return;
     }
 
-    // إخفاء نتائج الصور وتصفير النصوص
-    if (imageResBox) imageResBox.style.display = 'none';
-    textResBox.style.display = 'block';
-    textContent.innerHTML = `<div style="text-align:center; padding: 20px;"><p style="color:#4db8ff;">⏳ جاري تحليل العطل وتقدير التكلفة...</p></div>`;
+    // إظهار صندوق النتيجة وتصفيره
+    resultDiv.style.display = 'block';
+    resultDiv.innerHTML = `<div style="text-align:center; padding: 20px;"><p style="color:#4db8ff;">⏳ جاري تحليل العطل وتقدير التكلفة...</p></div>`;
 
     try {
         const response = await fetch(`${API_BASE_URL}/predict`, {
@@ -32,7 +29,7 @@ export async function diagnoseText() {
         const userText = textInput.value.toLowerCase();
         const multiplier = parseFloat(carCategory?.value) || 1;
 
-        // محرك التشخيص الذكي (من الكود الأول)
+        // محرك التشخيص الذكي
         let diag = {
             title: "فحص تقني عام",
             problem: "خلل يحتاج فحص كمبيوتر لتحديده بدقة.",
@@ -41,6 +38,7 @@ export async function diagnoseText() {
             color: aiStatus === "NEGATIVE" ? "#ff4d4d" : "#4db8ff"
         };
 
+        // تحليل الكلمات المفتاحية
         if (userText.includes("حرارة") || userText.includes("ترتفع")) {
             diag = { title: "منظومة التبريد", problem: "احتمال تهريب ماء أو عطل في المراوح.", solution: "افحص الرديتر فوراً وتجنب القيادة.", costMin: 400, costMax: 2000, color: "#ff4d4d" };
         } else if (userText.includes("طقطقه") || userText.includes("صوت") || userText.includes("مكينة")) {
@@ -54,8 +52,7 @@ export async function diagnoseText() {
         const finalMin = Math.round(diag.costMin * multiplier);
         const finalMax = Math.round(diag.costMax * multiplier);
 
-        // عرض النتيجة النهائية
-        textContent.innerHTML = `
+        resultDiv.innerHTML = `
             <div style="background: rgba(255,255,255,0.03); padding:15px; border-radius:15px; border:2px solid ${diag.color};">
                 <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
                     <h3 style="color:${diag.color}; margin:0;">📋 ${diag.title}</h3>
@@ -68,37 +65,23 @@ export async function diagnoseText() {
                 </div>
             </div>`;
 
-        // حفظ في Supabase (اختياري)
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-            await supabase.from('maintenance_reports').insert({
-                user_id: session.user.id,
-                title: diag.title,
-                description: diag.problem,
-                status: "pending",
-                cost: finalMax
-            });
-        }
-
     } catch (error) {
-        textContent.innerHTML = `<p style="color:#ff4d4d; text-align:center;">❌ فشل الاتصال بالسيرفر.</p>`;
+        resultDiv.innerHTML = `<p style="color:#ff4d4d; text-align:center;">❌ فشل الاتصال بالسيرفر.</p>`;
     }
 }
 
-// 2. دالة تشخيص الصور (من الكود الثاني)
+// 2. دالة تشخيص الصور
 export async function diagnoseImage() {
     const imageInput = document.getElementById('image-input');
     const imageResBox = document.getElementById('image-result-box');
     const imageContent = document.getElementById('image-res-content');
     const imageDisplay = document.getElementById('image-res-display');
-    const textResBox = document.getElementById('text-result-box');
 
     if (!imageInput || !imageInput.files[0]) {
         alert("يرجى رفع صورة أولاً");
         return;
     }
 
-    if (textResBox) textResBox.style.display = 'none';
     imageResBox.style.display = 'block';
     imageContent.innerHTML = `<div style="text-align:center; padding:10px;">⏳ جاري فحص الصورة بالذكاء الاصطناعي...</div>`;
     imageDisplay.style.display = 'none';
@@ -131,6 +114,6 @@ export async function diagnoseImage() {
     }
 }
 
-// السطر السحري لربط الأزرار بالـ HTML
-window.diagnoseText = diagnoseText;
+// ربط الدوال بالنافذة لضمان استدعائها من الـ HTML
+window.startAnalysis = startAnalysis;
 window.diagnoseImage = diagnoseImage;
