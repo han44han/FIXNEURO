@@ -14,22 +14,22 @@ from detectron2 import model_zoo
 
 app = Flask(__name__)
 
-# إعداد CORS بشكل شامل للسماح بجميع الرؤوس والطرق من موقع Vercel
+# إعداد CORS للسماح لموقعك على Vercel بالوصول الكامل
 CORS(app, resources={r"/*": {
     "origins": ["https://fixneuro.vercel.app"],
     "methods": ["GET", "POST", "OPTIONS"],
     "allow_headers": ["Content-Type", "Authorization"]
 }})
 
-# دالة للتعامل مع طلبات OPTIONS (Preflight) يدوياً للتأكد من حل مشكلة CORS
-@app.before_request
-def handle_preflight():
-    if request.method == "OPTIONS":
-        response = make_response()
-        response.headers.add("Access-Control-Allow-Origin", "https://fixneuro.vercel.app")
-        response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization")
-        response.headers.add("Access-Control-Allow-Methods", "GET,POST,OPTIONS")
-        return response
+# دالة يدوية لضمان الرد على طلبات المتصفح الاستكشافية (Preflight) بـ OK
+@app.route('/check', methods=['OPTIONS'])
+@app.route('/predict', methods=['OPTIONS'])
+def handle_options():
+    response = make_response()
+    response.headers.add("Access-Control-Allow-Origin", "https://fixneuro.vercel.app")
+    response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS")
+    response.headers.add("Access-Control-Allow-Headers", "Content-Type")
+    return response, 200
 
 # --- كود تحميل الموديل تلقائياً من جوجل درايف ---
 def download_model():
@@ -37,7 +37,7 @@ def download_model():
     url = f'https://drive.google.com/uc?export=download&id={model_id}'
     output = 'model_final.pth'
     if not os.path.exists(output):
-        print("Downloading model from Google Drive...")
+        print("جاري تحميل الموديل...")
         response = requests.get(url, stream=True)
         with open(output, 'wb') as f:
             for chunk in response.iter_content(chunk_size=8192):
@@ -46,7 +46,7 @@ def download_model():
 
 MODEL_PATH = download_model()
 
-# --- إعداد الموديل (Detectron2 Configuration) ---
+# --- إعداد الموديل (Detectron2) ---
 cfg = get_cfg()
 cfg.merge_from_file(model_zoo.get_config_file("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"))
 cfg.MODEL.ROI_HEADS.NUM_CLASSES = 5 
@@ -56,41 +56,30 @@ predictor = DefaultPredictor(cfg)
 
 class_names = ["Scratch", "Dent", "Broken Glass", "Severe Damage", "Clean"]
 
-@app.route('/')
-def home():
-    return "FixNeuro AI Server is Running!"
-
-# --- مسار التشخيص النصي (تم تحديثه لحل مشكلة CORS) ---
-@app.route('/check', methods=['POST', 'OPTIONS'])
+# --- مسار التشخيص النصي (الذي يواجه المشكلة حالياً) ---
+@app.route('/check', methods=['POST'])
 def check_text():
-    if request.method == "OPTIONS":
-        return _build_cors_preflight_response()
-        
     try:
         data = request.get_json()
-        if not data:
-            return jsonify({"error": "No data provided"}), 400
+        if not data or 'text' not in data:
+            return jsonify({"error": "No text provided"}), 400
             
         text_input = data.get('text', '').lower()
         
-        # كلمات مفتاحية لتحديد النتيجة (يمكنك استبدالها بموديلك)
-        negative_keywords = ['صدمة', 'عطل', 'حادث', 'صوت', 'broken', 'damage', 'accident', 'smoke']
-        is_negative = any(word in text_input for word in negative_keywords)
+        # كلمات مفتاحية بسيطة للتحليل النصي
+        damage_words = ['صوت', 'طقطقه', 'صدمه', 'كسر', 'accident', 'noise', 'damage']
+        is_negative = any(word in text_input for word in damage_words)
         
-        response = jsonify({
+        return jsonify({
             "status": "success",
             "prediction": "NEGATIVE" if is_negative else "POSITIVE"
         })
-        return response
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 # --- مسار التشخيص بالصور ---
-@app.route('/predict', methods=['POST', 'OPTIONS'])
+@app.route('/predict', methods=['POST'])
 def predict():
-    if request.method == "OPTIONS":
-        return _build_cors_preflight_response()
-
     if 'file' not in request.files:
         return jsonify({"error": "No file uploaded"}), 400
     
@@ -108,13 +97,6 @@ def predict():
         "status": "success",
         "prediction": prediction_text
     })
-
-def _build_cors_preflight_response():
-    response = make_response()
-    response.headers.add("Access-Control-Allow-Origin", "https://fixneuro.vercel.app")
-    response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization")
-    response.headers.add("Access-Control-Allow-Methods", "GET,POST,OPTIONS")
-    return response
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 10000))
