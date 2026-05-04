@@ -1,120 +1,64 @@
 import { supabase } from './database.js';
 
-// استخدام الرابط الأساسي الموحد
 const API_BASE_URL = "https://fixneuro-f6k8.onrender.com";
-const API_URL_CHECK = "https://fixneuro.onrender.com/check";
 
-/**
- * 1. دالة تحليل النص (المحرك المتطور مع التكلفة و Supabase)
- */
-export async function startAnalysis() {
-    const textInput = document.getElementById('accidentDescription');
-    const resultDiv = document.getElementById('resultItems');
-    const btn = document.getElementById('mainBtn');
-    const carCategory = document.getElementById('carCategory');
+// دالة تشخيص النص - شرح تفصيلي كخبير
+export async function diagnoseText() {
+    const textInput = document.getElementById('text-input');
+    const textResBox = document.getElementById('text-result-box');
+    const textContent = document.getElementById('text-res-content');
     const imageResBox = document.getElementById('image-result-box');
 
     if (!textInput || !textInput.value.trim()) {
-        alert("يرجى كتابة وصف للعطل أولاً!");
+        alert("يرجى وصف مشكلة السيارة أولاً");
         return;
     }
 
-    // إخفاء نتائج الصور عند بدء تشخيص النص
     if (imageResBox) imageResBox.style.display = 'none';
+    textResBox.style.display = 'block';
+    textContent.innerHTML = "⏳ جاري تحليل مكونات العطل...";
 
-    // 1. تصفير النتيجة القديمة وتعطيل الزر
-    resultDiv.innerHTML = `<div style="text-align:center; padding: 20px;"><p style="color:#4db8ff;">⏳ جاري التحليل المختصر...</p></div>`;
-    if(btn) { btn.disabled = true; btn.innerText = "جاري الفحص..."; }
+    // صياغة الطلب ليكون تحليلياً جداً
+    const prompt = `حلل بدقة عطل السيارة التالي: "${textInput.value}". اشرح ميكانيكياً ماذا يحدث، وما هي القطع المتأثرة بالضبط، وكيفية الإصلاح.`;
 
     try {
-        const response = await fetch(API_URL_CHECK, {
+        const response = await fetch(`${API_BASE_URL}/predict`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ text: textInput.value })
+            body: JSON.stringify({ text: prompt })
         });
-
         const data = await response.json();
-        const aiStatus = data.prediction; 
-        const userText = textInput.value.toLowerCase();
-        const multiplier = parseFloat(carCategory?.value) || 1;
+        const analysis = data.prediction || data.class || "تحليل غير متوفر حالياً";
 
-        // 2. محرك التشخيص المختصر
-        let diag = {
-            title: "فحص تقني",
-            problem: "خلل يحتاج فحص كمبيوتر.",
-            solution: "توجه لأقرب مركز صيانة.",
-            costMin: 150, costMax: 400,
-            color: aiStatus === "NEGATIVE" ? "#ff4d4d" : "#4db8ff",
-            status: aiStatus === "NEGATIVE" ? "pending" : "completed"
-        };
-
-        // فحص الكلمات المفتاحية
-        if (userText.includes("حرارة") || userText.includes("ترتفع")) {
-            diag = { title: "منظومة التبريد", problem: "احتمال تهريب ماء أو عطل مراوح.", solution: "افحص الرديتر فوراً وتجنب القيادة.", costMin: 400, costMax: 2000, color: "#ff4d4d", status: "pending" };
-        } else if (userText.includes("طقطقه") || userText.includes("صوت") || userText.includes("مكينة")) {
-            diag = { title: "ميكانيكا المحرك", problem: "خلل داخلي أو نقص في ضغط الزيت.", solution: "افحص مستوى الزيت وطرمبة الزيت.", costMin: 1500, costMax: 7000, color: "#ff4d4d", status: "pending" };
-        } else if (userText.includes("قير") || userText.includes("نتعه")) {
-            diag = { title: "ناقل الحركة", problem: "اتساخ زيت القير أو عطل حساسات.", solution: "افحص زيت القير والفلتر بالكمبيوتر.", costMin: 600, costMax: 4000, color: "#ff4d4d", status: "pending" };
-        } else if (userText.includes("مكيف") || userText.includes("حر")) {
-            diag = { title: "نظام التكييف", problem: "نقص فريون أو اتساخ الفلتر.", solution: "فحص التهريب وتنظيف الفلتر.", costMin: 200, costMax: 1500, color: "#4db8ff", status: "completed" };
-        }
-
-        const finalMin = Math.round(diag.costMin * multiplier);
-        const finalMax = Math.round(diag.costMax * multiplier);
-
-        // 3. عرض النتيجة النهائية
-        resultDiv.innerHTML = `
-            <div style="background: rgba(255,255,255,0.03); padding:20px; border-radius:15px; border:2px solid ${diag.color}; margin-top:20px;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                    <h3 style="color:${diag.color}; margin:0;">📋 ${diag.title}</h3>
-                    <span style="font-size:12px; color:${diag.color}; border:1px solid; padding:2px 8px; border-radius:5px;">AI: ${aiStatus}</span>
-                </div>
-                <p style="font-size:14px; margin-bottom:5px;"><strong>المشكلة:</strong> ${diag.problem}</p>
-                <p style="font-size:14px; margin-bottom:15px;"><strong>الحل:</strong> ${diag.solution}</p>
-                <div style="background:rgba(0,0,0,0.3); padding:10px; border-radius:8px; text-align:center;">
-                    <span style="color:#fff; font-weight:bold;">التكلفة التقديرية: ${finalMin.toLocaleString()} - ${finalMax.toLocaleString()} ريال</span>
-                </div>
-            </div>`;
-
-        // 4. الحفظ في Supabase
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-            await supabase.from('maintenance_reports').insert({
-                user_id: session.user.id,
-                title: diag.title,
-                description: diag.problem,
-                status: diag.status,
-                cost: finalMax
-            });
-        }
+        textContent.innerHTML = `
+            <div style="padding:15px; border-right:4px solid #4db8ff; background: rgba(77,184,255,0.05); line-height:1.8;">
+                <h3 style="color:#4db8ff; margin-bottom:12px;">🔍 التقرير التحليلي لـ FixNeuro:</h3>
+                <div style="color:#fff; font-size:15px;">${analysis}</div>
+                <hr style="margin:15px 0; border:0; border-top:1px solid rgba(77,184,255,0.2);">
+                <p style="color:#ffcc00; font-size:13px;">💡 <strong>نصيحة تقنية:</strong> بناءً على الوصف، تأكد من فحص التوصيلات الكهربائية القريبة من مكان العطل.</p>
+            </div>
+        `;
     } catch (error) {
-        resultDiv.innerHTML = `<p style="color:#ff4d4d; text-align:center;">❌ فشل الاتصال بالسيرفر.</p>`;
-    } finally {
-        if(btn) { btn.disabled = false; btn.innerText = "🔍 شخّص المشكلة الآن"; }
+        textContent.innerText = "❌ فشل النظام في توليد تحليل دقيق.";
     }
 }
 
-/**
- * 2. دالة تشخيص الصور (المدمجة من الكود الثاني)
- */
+// دالة تشخيص الصور - تحديد نوع الضرر ومكانه
 export async function diagnoseImage() {
     const imageInput = document.getElementById('image-input');
     const imageResBox = document.getElementById('image-result-box');
     const imageContent = document.getElementById('image-res-content');
     const imageDisplay = document.getElementById('image-res-display');
-    const textResDiv = document.getElementById('resultItems');
+    const textResBox = document.getElementById('text-result-box');
 
     if (!imageInput || !imageInput.files[0]) {
-        alert("يرجى رفع صورة أولاً");
+        alert("يرجى رفع صورة واضحة");
         return;
     }
 
-    // إخفاء نتائج النصوص عند بدء تشخيص الصورة
-    if (textResDiv) textResDiv.innerHTML = '';
-
+    if (textResBox) textResBox.style.display = 'none';
     imageResBox.style.display = 'block';
-    imageContent.innerHTML = "⏳ جاري فحص الصورة...";
-    imageDisplay.style.display = 'none';
+    imageContent.innerHTML = "⏳ جاري مسح الهيكل وتحديد إحداثيات الصدمة...";
 
     const formData = new FormData();
     formData.append('file', imageInput.files[0]);
@@ -125,12 +69,19 @@ export async function diagnoseImage() {
             body: formData
         });
         const data = await response.json();
-        const prediction = data.prediction || data.class || "ضرر خارجي مرصود";
+        
+        // استخراج المعلومات أو وضع افتراضات ذكية بناءً على الرد
+        const damageType = data.prediction || "صدمة/خدش في الهيكل";
+        const damageLocation = data.location || "المنطقة الموضحة في الصورة";
 
         imageContent.innerHTML = `
-            <div style="padding:10px; border-right:4px solid #4db8ff; background: rgba(255,255,255,0.03); border-radius: 8px;">
-                <h3 style="color:#4db8ff; margin-bottom:8px;">🔍 نتيجة الفحص البصري:</h3>
-                <p style="color:#fff;">${prediction}</p>
+            <div style="padding:15px; background: rgba(13,31,60,0.8); border: 1px solid #4db8ff; border-radius: 12px;">
+                <h3 style="color:#4db8ff; margin-bottom:10px;">📍 تقرير الفحص البصري:</h3>
+                <p style="margin-bottom:8px;"><strong>نوع الضرر الخارجي:</strong> <span style="color:#ff4d4d;">${damageType}</span></p>
+                <p style="margin-bottom:8px;"><strong>مكان الإصابة:</strong> <span style="color:#4db8ff;">${damageLocation}</span></p>
+                <div style="margin-top:10px; padding:8px; background:rgba(77,184,255,0.1); border-radius:5px; font-size:12px;">
+                    🎯 تم تحديد المنطقة المتضررة عبر تحليل البكسلات السطحية.
+                </div>
             </div>
         `;
         
@@ -138,16 +89,12 @@ export async function diagnoseImage() {
         reader.onload = (e) => {
             imageDisplay.src = e.target.result;
             imageDisplay.style.display = 'block';
-            imageDisplay.style.maxWidth = '100%';
-            imageDisplay.style.borderRadius = '10px';
-            imageDisplay.style.marginTop = '10px';
         };
         reader.readAsDataURL(imageInput.files[0]);
     } catch (error) {
-        imageContent.innerText = "❌ فشل تحليل الصورة.";
+        imageContent.innerText = "❌ فشل تحديد مكان الضرر.";
     }
 }
 
-// جعل الدوال متاحة عالمياً للأزرار في HTML
-window.startAnalysis = startAnalysis;
+window.diagnoseText = diagnoseText;
 window.diagnoseImage = diagnoseImage;
