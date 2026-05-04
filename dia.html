@@ -29,10 +29,13 @@
 
     .btn-check { width: 100%; background: linear-gradient(135deg, #1a6fd4, #4db8ff); color: white; border: none; border-radius: 15px; padding: 18px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
     .btn-check:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(26,111,212,0.4); }
+    .btn-check:disabled { opacity: 0.6; cursor: not-allowed; }
 
-    /* تنسيق صناديق النتائج المحدثة */
     .result-box { margin-top: 30px; display: none; padding: 20px; border-radius: 15px; background: rgba(13,31,60,0.6); border: 1px solid rgba(77,184,255,0.2); }
     .res-image-display { width: 100%; display: none; border-radius: 12px; margin-top: 15px; border: 1px solid rgba(77,184,255,0.3); }
+    
+    /* مكان عرض نتائج النص القادمة من الكود الأول */
+    #resultItems { margin-top: 20px; }
   </style>
 </head>
 <body>
@@ -64,10 +67,10 @@
       </select>
     </div>
 
-    <!-- مدخل النص -->
+    <!-- مدخل النص - تم تعديل الـ ID ليتوافق مع الكود الأول -->
     <div class="input-group" id="textInputGroup">
       <label>وصف المشكلة:</label>
-      <textarea id="text-input" placeholder="مثال: صوت طقطقة في المكينة..."></textarea>
+      <textarea id="accidentDescription" placeholder="مثال: صوت طقطقة في المكينة..."></textarea>
     </div>
 
     <!-- مدخل الصورة -->
@@ -76,12 +79,11 @@
       <input type="file" id="image-input" class="file-input" accept="image/*">
     </div>
 
-   <button id="mainBtn" onclick="startAnalysis()">شخّص المشكلة الآن</button>
+    <!-- الزر تم إضافة كلاس التنسيق له -->
+    <button id="mainBtn" class="btn-check">شخّص المشكلة الآن</button>
 
-    <!-- حاويات النتائج المنفصلة (الحل الجذري للتداخل) -->
-    <div id="text-result-box" class="result-box">
-        <div id="text-res-content"></div>
-    </div>
+    <!-- حاويات النتائج -->
+    <div id="resultItems"></div> <!-- هنا تظهر نتائج النص والتكلفة -->
 
     <div id="image-result-box" class="result-box">
         <div id="image-res-content"></div>
@@ -96,9 +98,7 @@
     const textGroup = document.getElementById('textInputGroup');
     const imageGroup = document.getElementById('imageInputGroup');
     const categoryGroup = document.getElementById('categoryGroup');
-    
-    // عناصر النتائج للإخفاء عند التبديل
-    const textResBox = document.getElementById('text-result-box');
+    const resultItems = document.getElementById('resultItems');
     const imageResBox = document.getElementById('image-result-box');
 
     btnText.onclick = () => {
@@ -107,7 +107,6 @@
         imageGroup.style.display = 'none';
         btnText.classList.add('active');
         btnImage.classList.remove('active');
-        // إخفاء نتائج الصور عند التحويل للنص
         imageResBox.style.display = 'none';
     };
 
@@ -117,13 +116,13 @@
         imageGroup.style.display = 'block';
         btnImage.classList.add('active');
         btnText.classList.remove('active');
-        // إخفاء نتائج النصوص عند التحويل للصور
-        textResBox.style.display = 'none';
+        resultItems.innerHTML = ''; 
     };
 </script>
 
 <script type="module">
-    import { diagnoseText, diagnoseImage } from './ai.js';
+    // استيراد الدوال من ملف ai.js
+    import { startAnalysis, diagnoseImage } from './ai.js';
     
     const mainBtn = document.getElementById('mainBtn');
     if (mainBtn) {
@@ -132,8 +131,10 @@
             const isTextMode = document.getElementById('btnText').classList.contains('active');
             
             if (isTextMode) {
-                diagnoseText();
+                // تشخيص النص (الكود الأول)
+                startAnalysis();
             } else {
+                // تشخيص الصور (الكود الثاني)
                 diagnoseImage();
             }
         });
@@ -141,5 +142,4 @@
 </script>
 
 </body>
-</html>
 </html>
