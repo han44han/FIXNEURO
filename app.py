@@ -2,41 +2,44 @@ import os
 import requests
 import numpy as np
 import cv2
-from flask import Flask, request, jsonify, make_response
-from flask_cors import CORS
+import torch
+from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 # استيراد أدوات Detectron2
 from detectron2.engine import DefaultPredictor
 from detectron2.config import get_cfg
 from detectron2 import model_zoo
 
-app = Flask(__name__)
+app = FastAPI(title="FixNeuro AI API")
 
-# إعداد CORS للسماح بالوصول الكامل من Vercel
-CORS(app, resources={r"/*": {
-    "origins": ["https://fixneuro.vercel.app"],
-    "methods": ["GET", "POST", "OPTIONS"],
-    "allow_headers": ["Content-Type", "Authorization"]
-}})
+# 1. إعداد CORS للسماح بالوصول من Vercel
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://fixneuro.vercel.app"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-# قاموس الحلول للأعطال النصية
+# قاموس الحلول
 TEXT_SOLUTIONS = {
     "engine": {"diag": "مشكلة في المحرك أو نظام الاحتراق", "sol": "يجب فحص البواجي وصمام الثروتل فوراً."},
-    "brake": {"diag": "تآكل في فحمات الفرامل أو نقص زيت الفرامل", "sol": "يرجى تغيير الفحمات وفحص الهوبات لسلامتك."},
-    "noise": {"diag": "خلل في المساعدات أو نظام التعليق", "sol": "تحتاج السيارة لفحص جلب المقصات والمساعدات الأمامية."},
-    "battery": {"diag": "ضعف في البطارية أو الدينامو", "sol": "افحص جهد البطارية ونظف أقطابها أو استبدلها إذا لزم الأمر."}
+    "brake": {"diag": "تآكل في فحمات الفرامل", "sol": "يرجى تغيير الفحمات وفحص الهوبات لسلامتك."},
+    "noise": {"diag": "خلل في نظام التعليق", "sol": "تحتاج السيارة لفحص جلب المقصات والمساعدات."},
+    "battery": {"diag": "ضعف في البطارية أو الدينامو", "sol": "افحص جهد البطارية ونظف أقطابها."}
 }
 
-# قاموس الحلول لأعطال الصور (Detectron2)
 IMAGE_SOLUTIONS = {
-    "Scratch": "خدوش سطحية في الطلاء. الحل: تلميع (Polishing) أو تنقيط بوية.",
-    "Dent": "انبعاج في الهيكل (دقة). الحل: سمكرة على البارد أو شفط بدون رش.",
-    "Broken Glass": "كسر في الزجاج. الحل: استبدال الزجاج المتضرر لضمان الرؤية.",
-    "Severe Damage": "تضرر هيكلي جسيم. الحل: سحب شاصيه وسمكرة شاملة ورش دهان.",
-    "Clean": "الهيكل سليم تماماً. الحل: لا يتطلب إصلاح، حافظ على الصيانة الدورية."
+    "Scratch": "خدوش سطحية في الطلاء. الحل: تلميع (Polishing).",
+    "Dent": "انبعاج في الهيكل. الحل: سمكرة على البارد أو شفط.",
+    "Broken Glass": "كسر في الزجاج. الحل: استبدال الزجاج المتضرر.",
+    "Severe Damage": "تضرر هيكلي جسيم. الحل: سمكرة شاملة ورش دهان.",
+    "Clean": "الهيكل سليم تماماً. الحل: لا يتطلب إصلاح."
 }
 
-# تحميل الموديل من جوجل درايف
+# 2. تحميل الموديل
 def download_model():
     model_id = '1SCiXoupm2eDFLqzjUKH2b8KGT0zQwpCx'
     url = f'https://drive.google.com/uc?export=download&id={model_id}'
@@ -50,25 +53,30 @@ def download_model():
 
 MODEL_PATH = download_model()
 
-# إعداد الموديل
+# 3. إعداد الموديل
 cfg = get_cfg()
 cfg.merge_from_file(model_zoo.get_config_file("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"))
 cfg.MODEL.ROI_HEADS.NUM_CLASSES = 5 
 cfg.MODEL.WEIGHTS = MODEL_PATH
-cfg.MODEL.DEVICE = "cpu" 
+cfg.MODEL.DEVICE = "cpu"
+cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.4 # تحسين الحساسية
 predictor = DefaultPredictor(cfg)
+
 class_names = ["Scratch", "Dent", "Broken Glass", "Severe Damage", "Clean"]
 
-@app.route('/check', methods=['POST', 'OPTIONS'])
-def check_text():
-    if request.method == "OPTIONS": return _cors_response()
-    
-    data = request.get_json()
-    text_input = data.get('text', '').lower()
-    
-    # تحديد التشخيص بناءً على الكلمات المفتاحية
+class TextRequest(BaseModel):
+    text: str
+
+@app.get("/")
+def home():
+    return {"message": "FixNeuro FastAPI is running"}
+
+# 4. مسار التشخيص النصي
+@app.post("/check")
+async def check_text(request: TextRequest):
+    text_input = request.text.lower()
     diagnosis = "عطل غير محدد بدقة"
-    solution = "يفضل فحص السيارة لدى فني كمبيوتر لتحديد الكود."
+    solution = "يفضل فحص السيارة لدى فني مختص."
     prediction = "POSITIVE"
 
     for key, val in TEXT_SOLUTIONS.items():
@@ -78,48 +86,47 @@ def check_text():
             prediction = "NEGATIVE"
             break
             
-    return jsonify({
+    return {
         "status": "success",
         "prediction": prediction,
         "diagnosis": diagnosis,
         "solution": solution
-    })
+    }
 
-@app.route('/predict', methods=['POST', 'OPTIONS'])
-def predict():
-    if request.method == "OPTIONS": return _cors_response()
+# 5. مسار التشخيص بالصور
+@app.post("/predict")
+async def predict(file: UploadFile = File(...)):
+    try:
+        contents = await file.read()
+        nparr = np.frombuffer(contents, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
-    file = request.files['file']
-    nparr = np.frombuffer(file.read(), np.uint8)
-    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        outputs = predictor(img)
+        instances = outputs["instances"]
+        
+        if len(instances) > 0:
+            pred_classes = instances.pred_classes.tolist()
+            detected_labels = list(set([class_names[i] for i in pred_classes]))
+            
+            if len(detected_labels) > 1 and "Clean" in detected_labels:
+                detected_labels.remove("Clean")
+            
+            res_class = " + ".join(detected_labels)
+            solutions = [IMAGE_SOLUTIONS.get(label, "فحص فني.") for label in detected_labels]
+            solution_text = " | ".join(solutions)
+        else:
+            res_class = "Clean"
+            solution_text = IMAGE_SOLUTIONS["Clean"]
 
-    outputs = predictor(img)
-    
-    # الحصول على التوقعات
-    instances = outputs["instances"]
-    if len(instances) > 0:
-        # نأخذ أول كلاس تم اكتشافه
-        cls_idx = instances.pred_classes[0].item()
-        res_class = class_names[cls_idx]
-    else:
-        res_class = "Clean"
+        return {
+            "status": "success",
+            "prediction": res_class,
+            "solution": solution_text
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-    # جلب الحل من القاموس الذي أنشأناه سابقاً
-    # تأكدي أن IMAGE_SOLUTIONS معرفة في أعلى الملف
-    solution_text = IMAGE_SOLUTIONS.get(res_class, "يرجى فحص السيارة بدقة لدى فني مختص.")
-
-    return jsonify({
-        "status": "success",
-        "prediction": res_class,
-        "solution": solution_text  # هذا السطر هو الذي سيمنع ظهور undefined
-    })
-
-def _cors_response():
-    response = make_response()
-    response.headers.add("Access-Control-Allow-Origin", "https://fixneuro.vercel.app")
-    response.headers.add("Access-Control-Allow-Headers", "Content-Type")
-    response.headers.add("Access-Control-Allow-Methods", "POST,OPTIONS")
-    return response
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 10000)))
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 10000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
