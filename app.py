@@ -94,15 +94,24 @@ def predict():
     img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
     outputs = predictor(img)
-    classes = outputs["instances"].pred_classes.tolist()
     
-    res_class = class_names[classes[0]] if len(classes) > 0 else "Clean"
-    solution = IMAGE_SOLUTIONS.get(res_class, "فحص الهيكل العام مطلوب.")
+    # الحصول على التوقعات
+    instances = outputs["instances"]
+    if len(instances) > 0:
+        # نأخذ أول كلاس تم اكتشافه
+        cls_idx = instances.pred_classes[0].item()
+        res_class = class_names[cls_idx]
+    else:
+        res_class = "Clean"
+
+    # جلب الحل من القاموس الذي أنشأناه سابقاً
+    # تأكدي أن IMAGE_SOLUTIONS معرفة في أعلى الملف
+    solution_text = IMAGE_SOLUTIONS.get(res_class, "يرجى فحص السيارة بدقة لدى فني مختص.")
 
     return jsonify({
         "status": "success",
         "prediction": res_class,
-        "solution": solution
+        "solution": solution_text  # هذا السطر هو الذي سيمنع ظهور undefined
     })
 
 def _cors_response():
