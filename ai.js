@@ -16,7 +16,7 @@ export async function startAnalysis() {
         const response = await fetch(`${API_BASE_URL}/check`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ text: textInput.value })
+           body: JSON.stringify({ text: userInputText }) // إرسال النص ككائن JSON
         });
         
         const data = await response.json();
