@@ -43,10 +43,13 @@ export async function diagnoseImage() {
     const imageDisplay = document.getElementById('image-res-display');
     const imageResBox = document.getElementById('image-result-box');
 
-    if (!imageInput.files[0]) return alert("ارفع صورة أولاً");
+    if (!imageInput || !imageInput.files[0]) {
+        alert("يرجى رفع صورة أولاً");
+        return;
+    }
 
     imageResBox.style.display = 'block';
-    imageContent.innerHTML = `<p style="color:#4db8ff; text-align:center;">🔍 جاري فحص الهيكل...</p>`;
+    imageContent.innerHTML = `<p style="color:#4db8ff; text-align:center;">🔍 جاري فحص الهيكل وتحديد الأضرار...</p>`;
 
     const formData = new FormData();
     formData.append('file', imageInput.files[0]);
@@ -57,36 +60,38 @@ export async function diagnoseImage() {
             body: formData
         });
 
+        if (!response.ok) throw new Error("Server Error");
+
         const data = await response.json();
-        // داخل دالة diagnoseImage بعد السطر: const data = await response.json();
-
-const detectedIssues = data.prediction || "غير محدد";
-const repairPlan = data.solution || "لا توجد خطة إصلاح متوفرة حالياً"; // نص احتياطي بدل undefined
-const isSafe = detectedIssues.toLowerCase().includes("clean");
-
-imageContent.innerHTML = `
-    <div style="padding:15px; border-radius:12px; background:rgba(255,255,255,0.05); border:2px solid ${isSafe ? '#2ecc71' : '#ff4d4d'};">
-        <h3 style="color:${isSafe ? '#2ecc71' : '#ff4d4d'};">📍 الأضرار المكتشفة:</h3>
-        <p style="font-size:18px; font-weight:bold;">${isSafe ? '✅ السيارة سليمة' : '⚠️ ' + detectedIssues}</p>
-        <p style="color:#4db8ff;"><strong>🛠️ خطة الإصلاح:</strong></p>
-        <p>${repairPlan}</p> 
-        ${!isSafe ? `<button onclick="window.location.href='map.html'" style="width:100%; margin-top:10px; background:#ff4d4d; color:white; border:none; padding:10px; border-radius:8px; cursor:pointer;">أقرب ورشة</button>` : ''}
-    </div>`;
-        const isSafe = data.prediction === "Clean";
+        
+        // --- تعديل: تعريف المتغيرات مرة واحدة فقط لتجنب الخطأ ---
+        const detectedIssues = data.prediction || "غير محدد";
+        const repairPlan = data.solution || "يرجى فحص السيارة لدى فني مختص.";
+        const isSafe = detectedIssues.toLowerCase().includes("clean"); 
+        
+        let statusColor = isSafe ? "#2ecc71" : "#ff4d4d"; 
 
         imageContent.innerHTML = `
-            <div style="padding:15px; border-radius:12px; background:rgba(255,255,255,0.05); border:2px solid ${isSafe ? '#2ecc71' : '#ff4d4d'};">
-                <h3 style="color:${isSafe ? '#2ecc71' : '#ff4d4d'};">📍 الأضرار المكتشفة:</h3>
-                <p style="font-size:18px; font-weight:bold;">${isSafe ? '✅ السيارة سليمة' : '⚠️ ' + data.prediction}</p>
-                <p style="color:#4db8ff;"><strong>🛠️ خطة الإصلاح:</strong></p>
-                <p>${data.solution}</p>
-                ${!isSafe ? `<button onclick="window.location.href='map.html'" style="width:100%; margin-top:10px; background:#ff4d4d; color:white; border:none; padding:10px; border-radius:8px; cursor:pointer;">أقرب ورشة</button>` : ''}
+            <div style="padding:15px; border-radius:12px; background:rgba(255,255,255,0.05); border:2px solid ${statusColor};">
+                <h3 style="color:${statusColor};">📍 الأضرار المكتشفة:</h3>
+                <p style="font-size:18px; font-weight:bold;">${isSafe ? '✅ السيارة سليمة' : '⚠️ ' + detectedIssues}</p>
+                <div style="margin-top:10px; border-top:1px solid rgba(255,255,255,0.1); padding-top:10px;">
+                    <p style="color:#4db8ff;"><strong>🛠️ خطة الإصلاح:</strong></p>
+                    <p>${repairPlan}</p>
+                </div>
+                ${!isSafe ? `<button onclick="window.location.href='map.html'" style="width:100%; margin-top:15px; background:#ff4d4d; color:white; border:none; padding:10px; border-radius:8px; cursor:pointer; font-weight:bold;">البحث عن أقرب ورشة</button>` : ''}
             </div>`;
             
+        // عرض معاينة الصورة
         const reader = new FileReader();
-        reader.onload = (e) => { imageDisplay.src = e.target.result; imageDisplay.style.display = 'block'; };
+        reader.onload = (e) => {
+            imageDisplay.src = e.target.result;
+            imageDisplay.style.display = 'block';
+        };
         reader.readAsDataURL(imageInput.files[0]);
-    } catch (e) {
-        imageContent.innerHTML = `<p style="color:#ff4d4d;">❌ خطأ في فحص الصورة.</p>`;
+
+    } catch (error) {
+        console.error("Error:", error);
+        imageContent.innerHTML = `<p style="color:#ff4d4d; text-align:center;">❌ فشل الاتصال بالسيرفر. تأكدي من تشغيل Render.</p>`;
     }
 }
