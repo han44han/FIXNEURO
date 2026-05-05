@@ -1,20 +1,15 @@
 import { supabase } from './database.js';
 
-// الرابط الخاص بسيرفرك على Render
 const API_BASE_URL = "https://fixneuro-f6k8.onrender.com";
 
-// --- 1. التشخيص النصي (لم يتم تغيير المنطق كما طلبتِ) ---
-export async function startAnalysis() { // تم تغيير الاسم ليتوافق مع استدعاء dia.html
+// --- 1. التشخيص النصي ---
+export async function startAnalysis() {
     const textInput = document.getElementById('accidentDescription');
     const resultBox = document.getElementById('resultItems');
-    const mainBtn = document.getElementById('mainBtn');
 
-    if (!textInput || !textInput.value.trim()) {
-        alert("يرجى وصف مشكلة السيارة أولاً");
-        return;
-    }
+    if (!textInput || !textInput.value.trim()) return alert("يرجى وصف مشكلة السيارة");
 
-    resultBox.innerHTML = `<p style="color:#4db8ff; text-align:center;">⏳ جاري تحليل العطل نصياً...</p>`;
+    resultBox.innerHTML = `<p style="color:#4db8ff; text-align:center;">⏳ جاري تحليل وصف العطل...</p>`;
     resultBox.style.display = 'block';
 
     try {
@@ -25,107 +20,59 @@ export async function startAnalysis() { // تم تغيير الاسم ليتوا
         });
         
         const data = await response.json();
-        const isNegative = data.prediction === 'NEGATIVE';
+        const isNeg = data.prediction === 'NEGATIVE';
 
         resultBox.innerHTML = `
-            <div style="background:rgba(255,255,255,0.05); padding:20px; border-radius:15px; border-right:5px solid ${isNegative ? '#ff4d4d' : '#4db8ff'};">
-                <h3 style="color:${isNegative ? '#ff4d4d' : '#4db8ff'}; margin-bottom:10px;">🔍 نتيجة التحليل النصي</h3>
-                <p><strong>حالة العطل:</strong> ${isNegative ? 'تحذير: عطل يحتاج فحص فوري (Severe)' : 'مشكلة بسيطة أو فحص اعتيادي (Minor)'}</p>
-                <p style="font-size:13px; color:#aaa; margin-top:10px;">تم التحليل باستخدام نموذج HuggingFace الذكي.</p>
-            </div>
-        `;
+            <div style="background:rgba(255,255,255,0.05); padding:20px; border-radius:15px; border-right:5px solid ${isNeg ? '#ff4d4d' : '#4db8ff'};">
+                <h3 style="color:${isNeg ? '#ff4d4d' : '#4db8ff'};">🔍 التقرير الفني:</h3>
+                <p><strong>التشخيص:</strong> ${data.diagnosis}</p>
+                <div style="margin-top:10px; padding:10px; background:rgba(0,0,0,0.2); border-radius:8px;">
+                    <p style="color:#2ecc71; margin:0;"><strong>💡 الحل المقترح:</strong></p>
+                    <p style="margin:5px 0 0 0;">${data.solution}</p>
+                </div>
+            </div>`;
     } catch (error) {
-        resultBox.innerHTML = `<p style="color:#ff4d4d; text-align:center;">❌ تعذر الاتصال بالسيرفر. تأكدي من تشغيل السيرفر على Render.</p>`;
+        resultBox.innerHTML = `<p style="color:#ff4d4d;">❌ فشل الاتصال بالسيرفر.</p>`;
     }
 }
 
-// --- 2. التشخيص بالصور (الربط مع موديل Kaggle/Detectron2) ---
+// --- 2. التشخيص بالصور ---
 export async function diagnoseImage() {
     const imageInput = document.getElementById('image-input');
-    const imageResBox = document.getElementById('image-result-box');
     const imageContent = document.getElementById('image-res-content');
     const imageDisplay = document.getElementById('image-res-display');
+    const imageResBox = document.getElementById('image-result-box');
 
-    if (!imageInput || !imageInput.files[0]) {
-        alert("يرجى رفع صورة أولاً");
-        return;
-    }
+    if (!imageInput.files[0]) return alert("ارفع صورة أولاً");
 
-    // تجهيز الواجهة للتحميل
     imageResBox.style.display = 'block';
-    imageContent.innerHTML = `<div style="text-align:center; padding:10px;"><p style="color:#4db8ff;">🔍 جاري تحليل الصورة عبر موديل الذكاء الاصطناعي (Detectron2)...</p></div>`;
-    imageDisplay.style.display = 'none';
+    imageContent.innerHTML = `<p style="color:#4db8ff; text-align:center;">🔍 جاري فحص الهيكل...</p>`;
 
     const formData = new FormData();
-    formData.append('file', imageInput.files[0]); // الاسم 'file' يجب أن يطابق ما في app.py
+    formData.append('file', imageInput.files[0]);
 
     try {
         const response = await fetch(`${API_BASE_URL}/predict`, {
             method: "POST",
             body: formData
         });
-        
-        if (!response.ok) throw new Error("Server Error");
 
         const data = await response.json();
-        
-        // الحصول على النتيجة من السيرفر (الموديل الخاص بك)
-        const rawPrediction = data.prediction || "Clean";
-        
-        // منطق تحديد الحالة (سليم أم متضرر) بناءً على الكلمة الراجعة
-        let predictionLower = rawPrediction.toLowerCase();
-        const isSafe = predictionLower.includes("clean") || 
-                       predictionLower.includes("no damage") || 
-                       predictionLower.includes("سليم");
+        const isSafe = data.prediction === "Clean";
 
-        let statusColor = isSafe ? "#2ecc71" : "#ff4d4d"; 
-        let statusIcon = isSafe ? "✅" : "⚠️";
-        let statusTitle = isSafe ? "السيارة سليمة" : "تم رصد ضرر";
-
-        // عرض النتيجة النهائية بشكل جذاب
         imageContent.innerHTML = `
-            <div style="padding:15px; border-radius:12px; background:rgba(255,255,255,0.05); border:2px solid ${statusColor};">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <h3 style="color:${statusColor}; margin:0;">📍 نتيجة الفحص البصري:</h3>
-                    <span style="background:${statusColor}; color:#000; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:bold;">Kaggle Model</span>
-                </div>
-                <p style="font-size:18px; font-weight:bold;">${statusIcon} الحالة المكتشفة: ${rawPrediction}</p>
-                <p style="font-size:13px; color:#aaa; margin-top:10px;">* تم تحليل هذه الصورة بواسطة خوارزميات الرؤية الحاسوبية المخصصة لـ FixNeuro.</p>
-                ${!isSafe ? `<button onclick="window.location.href='map.html'" style="width:100%; margin-top:15px; background:${statusColor}; color:white; border:none; padding:10px; border-radius:8px; cursor:pointer; font-weight:bold;">البحث عن أقرب ورشة إصلاح</button>` : ''}
+            <div style="padding:15px; border-radius:12px; background:rgba(255,255,255,0.05); border:2px solid ${isSafe ? '#2ecc71' : '#ff4d4d'};">
+                <h3 style="color:${isSafe ? '#2ecc71' : '#ff4d4d'};">📍 الأضرار المكتشفة:</h3>
+                <p style="font-size:18px; font-weight:bold;">${isSafe ? '✅ السيارة سليمة' : '⚠️ ' + data.prediction}</p>
+                <p style="color:#4db8ff;"><strong>🛠️ خطة الإصلاح:</strong></p>
+                <p>${data.solution}</p>
+                ${!isSafe ? `<button onclick="window.location.href='map.html'" style="width:100%; margin-top:10px; background:#ff4d4d; color:white; border:none; padding:10px; border-radius:8px; cursor:pointer;">أقرب ورشة</button>` : ''}
             </div>`;
-        
-        // عرض معاينة الصورة التي تم رفعها
+            
         const reader = new FileReader();
-        reader.onload = (e) => {
-            imageDisplay.src = e.target.result;
-            imageDisplay.style.display = 'block';
-        };
+        reader.onload = (e) => { imageDisplay.src = e.target.result; imageDisplay.style.display = 'block'; };
         reader.readAsDataURL(imageInput.files[0]);
-
-        // اختياري: حفظ التقرير في سوبابيس إذا كان المستخدم مسجلاً
-        if (data.status === "success") {
-             saveImageReportToSupabase(rawPrediction);
-        }
-
-    } catch (error) {
-        console.error("Error:", error);
-        imageContent.innerHTML = `<p style="color:#ff4d4d; text-align:center;">❌ فشل الاتصال بالسيرفر. تأكدي من رفع ملف app.py على Render وتشغيله.</p>`;
-    }
-}
-
-// دالة مساعدة لحفظ التقارير
-async function saveImageReportToSupabase(prediction) {
-    try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-            await supabase.from('maintenance_reports').insert({
-                user_id: session.user.id,
-                title: `فحص بصري: ${prediction}`,
-                description: `تم اكتشاف حالة: ${prediction} عبر تحليل الصورة.`,
-                status: 'completed'
-            });
-        }
-    } catch (e) { 
-        console.log("Database save skipped or failed"); 
+    } catch (e) {
+        imageContent.innerHTML = `<p style="color:#ff4d4d;">❌ خطأ في فحص الصورة.</p>`;
     }
 }
