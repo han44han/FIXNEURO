@@ -58,6 +58,20 @@ export async function diagnoseImage() {
         });
 
         const data = await response.json();
+        // داخل دالة diagnoseImage بعد السطر: const data = await response.json();
+
+const detectedIssues = data.prediction || "غير محدد";
+const repairPlan = data.solution || "لا توجد خطة إصلاح متوفرة حالياً"; // نص احتياطي بدل undefined
+const isSafe = detectedIssues.toLowerCase().includes("clean");
+
+imageContent.innerHTML = `
+    <div style="padding:15px; border-radius:12px; background:rgba(255,255,255,0.05); border:2px solid ${isSafe ? '#2ecc71' : '#ff4d4d'};">
+        <h3 style="color:${isSafe ? '#2ecc71' : '#ff4d4d'};">📍 الأضرار المكتشفة:</h3>
+        <p style="font-size:18px; font-weight:bold;">${isSafe ? '✅ السيارة سليمة' : '⚠️ ' + detectedIssues}</p>
+        <p style="color:#4db8ff;"><strong>🛠️ خطة الإصلاح:</strong></p>
+        <p>${repairPlan}</p> 
+        ${!isSafe ? `<button onclick="window.location.href='map.html'" style="width:100%; margin-top:10px; background:#ff4d4d; color:white; border:none; padding:10px; border-radius:8px; cursor:pointer;">أقرب ورشة</button>` : ''}
+    </div>`;
         const isSafe = data.prediction === "Clean";
 
         imageContent.innerHTML = `
