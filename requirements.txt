@@ -1,8 +1,6 @@
 fastapi
 uvicorn
 python-multipart
+flask-cors
 requests
-numpy
 opencv-python-headless
-torch
-torchvision
