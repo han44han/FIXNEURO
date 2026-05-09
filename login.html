@@ -27,9 +27,6 @@
     .card-icon { width: 75px; height: 75px; background: linear-gradient(135deg, rgba(26,111,212,0.4), rgba(77,184,255,0.3)); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 34px; margin: 0 auto 20px; border: 1px solid rgba(77,184,255,0.3); box-shadow: 0 8px 25px rgba(26,111,212,0.3); }
     .card-header h2 { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
     .card-header p { color: #7a9abf; font-size: 14px; }
-    .tabs { display: flex; gap: 8px; margin-bottom: 25px; background: rgba(10,25,50,0.5); border-radius: 12px; padding: 5px; }
-    .tab { flex: 1; padding: 10px; text-align: center; border-radius: 9px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s; color: #7a9abf; border: none; background: none; }
-    .tab.active { background: linear-gradient(135deg, #1a6fd4, #1558a8); color: white; box-shadow: 0 4px 15px rgba(26,111,212,0.3); }
     .form-group { margin-bottom: 18px; }
     .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; color: #aac4e0; }
     .input-wrap { position: relative; }
@@ -79,29 +76,13 @@
         <p>سجّل دخولك للوصول إلى حسابك</p>
       </div>
       <div class="message" id="message"></div>
-      <div class="tabs">
-        <button class="tab active" id="tabEmail" onclick="switchTab('email')">📧 بالإيميل</button>
-        <button class="tab" id="tabPhone" onclick="switchTab('phone')">📱 برقم الجوال</button>
-      </div>
-      <div id="emailSection">
-        <div class="form-group">
-          <label>البريد الإلكتروني</label>
-          <div class="input-wrap">
-            <span class="input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
-            <input type="email" id="email" placeholder="example@email.com" style="padding-left:16px;" />
-          </div>
-          <div class="field-error" id="emailError"></div>
+      <div class="form-group">
+        <label>البريد الإلكتروني</label>
+        <div class="input-wrap">
+          <span class="input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
+          <input type="email" id="email" placeholder="example@email.com" style="padding-left:16px;" />
         </div>
-      </div>
-      <div id="phoneSection" style="display:none;">
-        <div class="form-group">
-          <label>رقم الجوال</label>
-          <div class="input-wrap">
-            <span class="input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></span>
-            <input type="tel" id="phoneInput" placeholder="05xxxxxxxx" style="padding-left:16px;" />
-          </div>
-          <div class="field-error" id="phoneError"></div>
-        </div>
+        <div class="field-error" id="emailError"></div>
       </div>
       <div class="form-group">
         <label>كلمة المرور</label>
@@ -128,17 +109,6 @@
     const eyeOpen = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`
     const eyeClosed = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`
 
-    let currentTab = 'email'
-
-    window.switchTab = function(tab) {
-      currentTab = tab
-      document.getElementById('tabEmail').classList.toggle('active', tab === 'email')
-      document.getElementById('tabPhone').classList.toggle('active', tab === 'phone')
-      document.getElementById('emailSection').style.display = tab === 'email' ? 'block' : 'none'
-      document.getElementById('phoneSection').style.display = tab === 'phone' ? 'block' : 'none'
-      document.getElementById('message').style.display = 'none'
-    }
-
     const toggleBtn = document.getElementById('togglePass')
     const passInput = document.getElementById('password')
     toggleBtn.addEventListener('click', function() {
@@ -147,54 +117,29 @@
     })
 
     document.getElementById('loginBtn').addEventListener('click', async function() {
+      const email = document.getElementById('email').value.trim()
       const pass = document.getElementById('password').value
       const msg = document.getElementById('message')
       msg.style.display = 'none'
       document.querySelectorAll('.field-error').forEach(e => e.style.display = 'none')
 
+      if (!email) {
+        document.getElementById('emailError').style.display = 'block'
+        document.getElementById('emailError').innerText = '⚠️ يرجى إدخال البريد الإلكتروني'
+        return
+      }
       if (!pass) {
         document.getElementById('passError').style.display = 'block'
         document.getElementById('passError').innerText = '⚠️ يرجى إدخال كلمة المرور'
         return
       }
 
-      this.disabled = true; this.innerText = 'جاري الدخول...'
-
-      let email = ''
-
-      if (currentTab === 'email') {
-        email = document.getElementById('email').value.trim()
-        if (!email) {
-          document.getElementById('emailError').style.display = 'block'
-          document.getElementById('emailError').innerText = '⚠️ يرجى إدخال البريد الإلكتروني'
-          this.disabled = false; this.innerText = 'تسجيل الدخول'; return
-        }
-      } else {
-        const phone = document.getElementById('phoneInput').value.trim()
-        if (!phone) {
-          document.getElementById('phoneError').style.display = 'block'
-          document.getElementById('phoneError').innerText = '⚠️ يرجى إدخال رقم الجوال'
-          this.disabled = false; this.innerText = 'تسجيل الدخول'; return
-        }
-        // البحث عن الإيميل المرتبط برقم الجوال
-        const { data: profile } = await supabase.from('profiles').select('id').eq('phone', phone).maybeSingle()
-        if (!profile) {
-          document.getElementById('phoneError').style.display = 'block'
-          document.getElementById('phoneError').innerText = '⚠️ هذا الرقم غير مسجل'
-          this.disabled = false; this.innerText = 'تسجيل الدخول'; return
-        }
-        // جلب الإيميل من auth.users عبر RPC
-        const { data: userData } = await supabase.rpc('get_user_email_by_id', { user_id: profile.id })
-        if (!userData) {
-          msg.style.display = 'block'; msg.className = 'message error'
-          msg.innerText = '❌ تعذر الدخول برقم الجوال، استخدم الإيميل بدلاً منه'
-          this.disabled = false; this.innerText = 'تسجيل الدخول'; return
-        }
-        email = userData
-      }
+      this.disabled = true
+      this.innerText = 'جاري الدخول...'
 
       const { error } = await supabase.auth.signInWithPassword({ email, password: pass })
-      this.disabled = false; this.innerText = 'تسجيل الدخول'
+      this.disabled = false
+      this.innerText = 'تسجيل الدخول'
 
       if (error) {
         msg.style.display = 'block'; msg.className = 'message error'
