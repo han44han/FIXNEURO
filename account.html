@@ -40,18 +40,18 @@
 </head>
 <body>
   <nav>
-  <a href="index.html" class="logo">
-    <div class="logo-icon">🔧</div>
-    <div class="logo-text">Fix<span>NEURO</span></div>
-  </a>
-  <div class="nav-links">
-    <a href="account.html">👤 حسابي</a>
-    <a href="dia.html">🔍 تشخيص</a>
-    <a href="map.html">📍 الورش</a>
-    <a href="reports.html">📋 التقارير</a>
-    <a href="#" id="logoutBtn" style="color:#ff6b6b; font-weight:600;">خروج</a>
-  </div>
-</nav>
+    <a href="index.html" class="logo">
+      <div class="logo-icon">🔧</div>
+      <div class="logo-text">Fix<span>NEURO</span></div>
+    </a>
+    <div class="nav-links">
+      <a href="account.html">👤 حسابي</a>
+      <a href="dia.html">🔍 تشخيص</a>
+      <a href="map.html">📍 الورش</a>
+      <a href="reports.html">📋 التقارير</a>
+      <a href="#" id="logoutBtn" style="color:#ff6b6b; font-weight:600;">خروج</a>
+    </div>
+  </nav>
   <div class="container">
     <div class="page-header">
       <h2>👤 حسابي</h2>
@@ -73,40 +73,52 @@
         <div class="info-value" id="infoEmail">...</div>
       </div>
       <div class="info-row">
-        <div class="info-label">📱 رقم الجوال</div>
-        <div class="info-value" id="infoPhone">غير مضاف</div>
-      </div>
-      <div class="info-row">
         <div class="info-label">📅 تاريخ التسجيل</div>
         <div class="info-value" id="infoDate">...</div>
       </div>
     </div>
     <div class="actions-card">
       <a href="forgot-password.html" class="action-btn">🔑 تغيير كلمة المرور</a>
-      <a href="#" class="action-btn danger" id="logoutBtn">🚪 تسجيل الخروج</a>
+      <a href="#" class="action-btn danger" id="logoutBtn2">🚪 تسجيل الخروج</a>
     </div>
   </div>
   <footer><p>©️ 2025 FixNeuro - Car Doctor. جميع الحقوق محفوظة</p></footer>
+
   <script type="module">
     import { supabase } from './database.js'
+
     async function init() {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) { window.location.href = 'login.html'; return }
+
       const user = session.user
       document.getElementById('infoEmail').innerText = user.email || '—'
       document.getElementById('infoDate').innerText = new Date(user.created_at).toLocaleDateString('ar-SA')
-      const { data: profile } = await supabase.from('profiles').select('full_name, phone').eq('id', user.id).single()
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .single()
+
       if (profile?.full_name) {
         document.getElementById('avatarName').innerText = profile.full_name
         document.getElementById('infoName').innerText = profile.full_name
       }
-      if (profile?.phone) document.getElementById('infoPhone').innerText = profile.phone
     }
+
     document.getElementById('logoutBtn').addEventListener('click', async (e) => {
       e.preventDefault()
       await supabase.auth.signOut()
       window.location.href = 'splash.html'
     })
+
+    document.getElementById('logoutBtn2').addEventListener('click', async (e) => {
+      e.preventDefault()
+      await supabase.auth.signOut()
+      window.location.href = 'splash.html'
+    })
+
     init()
   </script>
 </body>
